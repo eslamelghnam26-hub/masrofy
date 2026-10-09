@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'store/masrofy_store.dart';
 import 'theme/app_theme.dart';
 
@@ -41,7 +42,9 @@ class MasrofyApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          home: HomeScreen(store: store),
+          home: store.loggedIn
+              ? HomeScreen(store: store)
+              : LoginScreen(store: store),
         );
       },
     );

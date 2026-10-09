@@ -9,10 +9,12 @@ class MasrofyStore extends ChangeNotifier {
   static const _key = 'masrofy.transactions.v1';
   static const _themeKey = 'masrofy.darkMode.v1';
   static const _langKey = 'masrofy.language.v1';
+  static const _authKey = 'masrofy.loggedIn.v1';
 
   List<Transaction> _transactions = [];
   bool _loaded = false;
   bool _darkMode = true;
+  bool _loggedIn = false;
   String _language = 'ar';
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
 
@@ -21,6 +23,8 @@ class MasrofyStore extends ChangeNotifier {
   bool get loaded => _loaded;
 
   bool get darkMode => _darkMode;
+
+  bool get loggedIn => _loggedIn;
 
   String get language => _language;
 
@@ -69,11 +73,19 @@ class MasrofyStore extends ChangeNotifier {
     await prefs.setString(_langKey, lang);
   }
 
+  Future<void> setLoggedIn(bool value) async {
+    _loggedIn = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_authKey, value);
+  }
+
   Future<void> load() async {
     if (_loaded) return;
     final prefs = await SharedPreferences.getInstance();
     _darkMode = prefs.getBool(_themeKey) ?? true;
     _language = prefs.getString(_langKey) ?? 'ar';
+    _loggedIn = prefs.getBool(_authKey) ?? false;
     final raw = prefs.getString(_key);
     if (raw != null) {
       try {

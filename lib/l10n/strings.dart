@@ -66,4 +66,32 @@ class Strings {
   String currencyLocale() => isAr ? 'ar' : 'en_US';
 
   String dateLocale() => isAr ? 'ar' : 'en';
+
+  String get welcomeTitle => isAr ? 'أهلاً بيك في مصروفي' : 'Welcome to Masrofy';
+
+  String get welcomeSubtitle =>
+      isAr ? 'اقفل التطبيق وابدأ تتحكم في فلوسك خطوة بخطوة' : 'Open the app and start taking control of your money';
+
+  String get loginTitle => isAr ? 'تسجيل الدخول' : 'Sign in';
+
+  String get phoneHint => isAr ? 'أدخل رقم الموبايل' : 'Enter your phone number';
+
+  String get continueLabel => isAr ? 'متابعة' : 'Continue';
+
+  String get phoneInvalid =>
+      isAr ? 'رقم الموبايل غير صحيح' : 'Invalid phone number';
+
+  String get otpTitle => isAr ? 'كود التفعيل' : 'Verification code';
+
+  String get otpSubtitle =>
+      isAr ? 'أدخل الكود اللي اتجرسل ليك' : 'Enter the code sent to you';
+
+  String get otpHint => isAr ? 'الكود التجريبي: 1234' : 'Demo code: 1234';
+
+  String get otpWrong => isAr ? 'الكود غير صحيح' : 'Wrong code';
+
+  String get startApp => isAr ? 'ابدأ' : 'Get started';
+
+  String get welcomeStory =>
+      isAr ? 'تتبع كل جنيه فين راح وجاء' : 'Track every pound in and out';
 }
