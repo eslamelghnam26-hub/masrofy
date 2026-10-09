@@ -93,6 +93,10 @@ class Strings {
 
   String get otpWrong => isAr ? 'الكود غير صحيح' : 'Wrong code';
 
+  String get otpIncomplete => isAr
+      ? 'أدخل كل أرقام الكود'
+      : 'Enter all the digits of the code';
+
   String get otpSendFailed =>
       isAr ? 'تعذر إرسال الكود. حاول مرة أخرى' : 'Failed to send code. Try again';
 

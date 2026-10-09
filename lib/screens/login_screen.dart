@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../formatters/digit_formatter.dart';
 import '../l10n/strings.dart';
 import '../services/auth_service.dart';
 import '../store/masrofy_store.dart';
@@ -31,7 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _continue() async {
     final s = Strings(widget.store.language);
-    final digits = _phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final digits =
+        normalizeDigits(_phoneController.text).replaceAll(RegExp(r'[^0-9]'), '');
     if (digits.length != 11 || !digits.startsWith('01')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -152,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           textInputAction: TextInputAction.done,
                           onSubmitted: (_) => _continue(),
                           inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
+                            DigitInputFormatter(),
                             LengthLimitingTextInputFormatter(11),
                           ],
                           style: TextStyle(

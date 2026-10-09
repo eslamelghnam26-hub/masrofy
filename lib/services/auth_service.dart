@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import '../formatters/digit_formatter.dart';
+
 /// خدمة المصادقة: تحاول استخدام Firebase Auth الحقيقي (SMS) أولاً،
 /// وإذا لم يكن المشروع مكوّناً (بدون google-services.json)
 /// تتحوّل تلقائياً للوضع التجريبي بكود ثابت 1234.
@@ -9,8 +11,12 @@ class AuthService {
 
   static final AuthService instance = AuthService._();
 
+  /// الكود التجريبي المستخدم عندما لا يكون Firebase مكوّناً.
+  static const String demoCode = '1234';
+
   bool _firebaseReady = false;
   bool _sendFailed = false;
+  String? _verificationId;
 
   /// يشير إلى أن Firebase متاح فعلاً (مشروع حقيقي مكوّن).
   bool get firebaseReady => _firebaseReady;
@@ -28,6 +34,9 @@ class AuthService {
   }
 
   Future<AuthResult> sendCode(String phone) async {
+    // نضّر كل محاولة سابقة حتى لا تسرّب حالة قديمة إلى التحقق الحالي.
+    _verificationId = null;
+    _sendFailed = false;
     if (!_firebaseReady) {
       return const AuthResult.demo();
     }
@@ -57,19 +66,18 @@ class AuthService {
     }
   }
 
-  String? _verificationId;
-
   Future<bool> verifyCode(String verificationId, String code) async {
-    if (_verificationId == null && verificationId.isEmpty) {
-      // الوضع التجريبي: الكود الثابت 1234
-      return code == '1234';
+    // نطبّق الأرقام دائماً (يدعم الإدخال العربي ١٢٣٤ أيضاً).
+    final normalized = normalizeDigits(code.trim());
+    // الوضع التجريبي يُحدَّد من الـverificationId الممرَّر فقط
+    // حتى لا تؤثر أي حالة سابقة على المقارنة.
+    if (verificationId.isEmpty) {
+      return normalized == demoCode;
     }
     try {
       final credential = PhoneAuthProvider.credential(
-        verificationId: verificationId.isNotEmpty
-            ? verificationId
-            : _verificationId!,
-        smsCode: code,
+        verificationId: verificationId,
+        smsCode: normalized,
       );
       await FirebaseAuth.instance.signInWithCredential(credential);
       return true;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../formatters/digit_formatter.dart';
 import '../l10n/strings.dart';
 import '../services/auth_service.dart';
 import '../store/masrofy_store.dart';
@@ -37,6 +38,12 @@ class _OtpScreenState extends State<OtpScreen> {
     _digitCount = _isReal ? 6 : 4;
     _controllers = List.generate(_digitCount, (_) => TextEditingController());
     _focuses = List.generate(_digitCount, (_) => FocusNode());
+    // تركيز تلقائي على أول خانة (يسار) لبدء الإدخال فوراً.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _focuses.isNotEmpty) {
+        _focuses.first.requestFocus();
+      }
+    });
   }
 
   @override
@@ -60,12 +67,19 @@ class _OtpScreenState extends State<OtpScreen> {
     }
   }
 
-  String get _entered => _controllers.map((c) => c.text.trim()).join();
+  /// يجمع الأرقام كما تظهر بصرياً (يسار -> يمين) بغض النظر عن اتجاه الواجهة،
+/// ويحوّل الأرقام العربية إلى ASCII قبل المقارنة.
+  String get _entered =>
+      normalizeDigits(_controllers.map((c) => c.text).join());
 
   Future<void> _verify() async {
     final s = Strings(widget.store.language);
     final code = _entered;
     if (code.length != _digitCount) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(s.otpIncomplete)));
+      }
       return;
     }
     setState(() => _verifying = true);
@@ -141,44 +155,48 @@ class _OtpScreenState extends State<OtpScreen> {
                 ),
               ),
               const SizedBox(height: 34),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(_digitCount, (i) {
-                  return SizedBox(
-                    width: boxWidth,
-                    height: 76,
-                    child: TextField(
-                      controller: _controllers[i],
-                      focusNode: _focuses[i],
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      maxLength: 1,
-                      onChanged: (v) => _onChanged(i, v),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(1),
-                      ],
-                      style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: p.textPrimary),
-                      decoration: InputDecoration(
-                        counterText: '',
-                        filled: true,
-                        fillColor: p.bgElevated,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: p.cardBorder),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide:
-                              BorderSide(color: p.accent, width: 1.6),
+              // صناديق الكود ثابتة الاتجاه (يسار -> يمين) مهما كان لغة الواجهة،
+              // حتى يتطابق ترتيب الإدخال مع ترتيب join() وترتيب كود SMS.
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(_digitCount, (i) {
+                    return SizedBox(
+                      width: boxWidth,
+                      height: 76,
+                      child: TextField(
+                        controller: _controllers[i],
+                        focusNode: _focuses[i],
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        onChanged: (v) => _onChanged(i, v),
+                        inputFormatters: [
+                          DigitInputFormatter(),
+                          LengthLimitingTextInputFormatter(1),
+                        ],
+                        style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: p.textPrimary),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          filled: true,
+                          fillColor: p.bgElevated,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: p.cardBorder),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide:
+                                BorderSide(color: p.accent, width: 1.6),
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
               const SizedBox(height: 18),
               Center(
