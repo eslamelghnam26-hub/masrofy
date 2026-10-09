@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/strings.dart';
+import '../services/auth_service.dart';
 import '../store/masrofy_store.dart';
 import '../theme/app_theme.dart';
 import 'welcome_screen.dart';
@@ -9,18 +10,34 @@ import 'welcome_screen.dart';
 class OtpScreen extends StatefulWidget {
   final MasrofyStore store;
   final String phone;
+  final String verificationId;
 
-  const OtpScreen({super.key, required this.store, required this.phone});
+  const OtpScreen({
+    super.key,
+    required this.store,
+    required this.phone,
+    this.verificationId = '',
+  });
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  final List<TextEditingController> _controllers =
-      List.generate(4, (_) => TextEditingController());
-  final List<FocusNode> _focuses = List.generate(4, (_) => FocusNode());
+  late final int _digitCount;
+  late final List<TextEditingController> _controllers;
+  late final List<FocusNode> _focuses;
   bool _verifying = false;
+
+  bool get _isReal => widget.verificationId.isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    _digitCount = _isReal ? 6 : 4;
+    _controllers = List.generate(_digitCount, (_) => TextEditingController());
+    _focuses = List.generate(_digitCount, (_) => FocusNode());
+  }
 
   @override
   void dispose() {
@@ -35,34 +52,35 @@ class _OtpScreenState extends State<OtpScreen> {
 
   void _onChanged(int index, String value) {
     if (value.isEmpty) return;
-    if (index < 3) {
+    if (index < _digitCount - 1) {
       _focuses[index + 1].requestFocus();
     } else {
       _focuses[index].unfocus();
+      _verify();
     }
   }
 
-  String get _entered =>
-      _controllers.map((c) => c.text.trim()).join();
+  String get _entered => _controllers.map((c) => c.text.trim()).join();
 
   Future<void> _verify() async {
     final s = Strings(widget.store.language);
-    if (_entered.length != 4) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(s.otpWrong)));
+    final code = _entered;
+    if (code.length != _digitCount) {
       return;
     }
     setState(() => _verifying = true);
-    await Future.delayed(const Duration(milliseconds: 900));
+    final delayed = Future.delayed(const Duration(milliseconds: 700));
+    final ok = await AuthService.instance.verifyCode(widget.verificationId, code);
+    await delayed;
     if (!mounted) return;
-    if (_entered == '1234') {
+    if (ok) {
       await widget.store.setLoggedIn(true);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (_, _, _) => WelcomeScreen(store: widget.store),
-          transitionsBuilder: (_, animation, _, child) => FadeTransition(
-              opacity: animation, child: child),
+          transitionsBuilder: (_, animation, _, child) =>
+              FadeTransition(opacity: animation, child: child),
         ),
       );
     } else {
@@ -76,8 +94,10 @@ class _OtpScreenState extends State<OtpScreen> {
   Widget build(BuildContext context) {
     final p = context.palette;
     final s = Strings(widget.store.language);
+    final boxWidth = (MediaQuery.of(context).size.width - 52 - 10 * (_digitCount - 1)) / _digitCount;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -87,14 +107,13 @@ class _OtpScreenState extends State<OtpScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 26),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
-              Icon(Icons.sms_outlined,
-                  size: 56, color: p.accent.withValues(alpha: 0.9)),
+              Icon(Icons.sms_outlined, size: 56, color: p.accent.withValues(alpha: 0.9)),
               const SizedBox(height: 18),
               Text(
                 s.otpTitle,
@@ -124,9 +143,9 @@ class _OtpScreenState extends State<OtpScreen> {
               const SizedBox(height: 34),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(4, (i) {
+                children: List.generate(_digitCount, (i) {
                   return SizedBox(
-                    width: 68,
+                    width: boxWidth,
                     height: 76,
                     child: TextField(
                       controller: _controllers[i],
@@ -134,10 +153,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
                       maxLength: 1,
-                      onChanged: (v) {
-                        _onChanged(i, v);
-                        if (v.isNotEmpty && i == 3) _verify();
-                      },
+                      onChanged: (v) => _onChanged(i, v),
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(1),
@@ -156,8 +172,8 @@ class _OtpScreenState extends State<OtpScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                              color: p.accent, width: 1.6),
+                          borderSide:
+                              BorderSide(color: p.accent, width: 1.6),
                         ),
                       ),
                     ),
@@ -167,7 +183,7 @@ class _OtpScreenState extends State<OtpScreen> {
               const SizedBox(height: 18),
               Center(
                 child: Text(
-                  s.otpHint,
+                  _isReal ? s.otpRealHint : s.otpHint,
                   style: TextStyle(fontSize: 12, color: p.textMuted),
                 ),
               ),

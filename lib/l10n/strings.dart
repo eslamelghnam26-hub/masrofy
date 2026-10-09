@@ -88,7 +88,16 @@ class Strings {
 
   String get otpHint => isAr ? 'الكود التجريبي: 1234' : 'Demo code: 1234';
 
+  String get otpRealHint =>
+      isAr ? 'أدخل الكود اللي وصل في رسالة SMS' : 'Enter the code from the SMS';
+
   String get otpWrong => isAr ? 'الكود غير صحيح' : 'Wrong code';
+
+  String get otpSendFailed =>
+      isAr ? 'تعذر إرسال الكود. حاول مرة أخرى' : 'Failed to send code. Try again';
+
+  String get demoModeNotice =>
+      isAr ? 'الوضع التجريبي (بدون Firebase): استخدم الكود 1234' : 'Demo mode (no Firebase): use code 1234';
 
   String get startApp => isAr ? 'ابدأ' : 'Get started';
 
