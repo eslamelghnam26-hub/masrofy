@@ -7,13 +7,20 @@ import '../models/transaction.dart';
 
 class MasrofyStore extends ChangeNotifier {
   static const _key = 'masrofy.transactions.v1';
+  static const _themeKey = 'masrofy.darkMode.v1';
 
   List<Transaction> _transactions = [];
   bool _loaded = false;
+  bool _darkMode = true;
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
 
   List<Transaction> get transactions => List.unmodifiable(_transactions);
 
   bool get loaded => _loaded;
+
+  bool get darkMode => _darkMode;
+
+  DateTime get selectedMonth => _selectedMonth;
 
   double get totalIncome =>
       _transactions.where((t) => t.type == TxType.income).fold(0, (s, t) => s + t.amount);
@@ -29,9 +36,31 @@ class MasrofyStore extends ChangeNotifier {
     return list;
   }
 
+  List<Transaction> monthTransactions() {
+    final list = _transactions
+        .where((t) =>
+            t.date.year == _selectedMonth.year && t.date.month == _selectedMonth.month)
+        .toList();
+    list.sort((a, b) => b.date.compareTo(a.date));
+    return list;
+  }
+
+  Future<void> setMonth(DateTime month) async {
+    _selectedMonth = DateTime(month.year, month.month, 1);
+    notifyListeners();
+  }
+
+  Future<void> toggleTheme() async {
+    _darkMode = !_darkMode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_themeKey, _darkMode);
+  }
+
   Future<void> load() async {
     if (_loaded) return;
     final prefs = await SharedPreferences.getInstance();
+    _darkMode = prefs.getBool(_themeKey) ?? true;
     final raw = prefs.getString(_key);
     if (raw != null) {
       try {

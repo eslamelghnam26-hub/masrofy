@@ -27,7 +27,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   late DateTime _selectedDate;
 
   bool get _isIncome => widget.type == TxType.income;
-  Color get _accent => _isIncome ? AppColors.income : AppColors.expense;
 
   @override
   void initState() {
@@ -69,8 +68,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+    final accent = _isIncome ? p.income : p.expense;
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: p.bg,
       appBar: AppBar(
         title: Text(_isIncome ? 'اضافة دخل' : 'اضافة مصروف'),
         leading: IconButton(
@@ -81,13 +82,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
-          _AmountCard(accent: _accent, controller: _amountController),
+          _AmountCard(accent: accent, controller: _amountController),
           const SizedBox(height: 20),
-          const Text('الفئة',
+          Text('الفئة',
               style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary)),
+                  color: p.textSecondary)),
           const SizedBox(height: 10),
           _CategoryGrid(
             type: widget.type,
@@ -95,33 +96,32 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             onSelect: (id) => setState(() => _selectedCategory = id),
           ),
           const SizedBox(height: 20),
-          const Text('التاريخ',
+          Text('التاريخ',
               style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary)),
+                  color: p.textSecondary)),
           const SizedBox(height: 10),
           InkWell(
-            onTap: () => _pickDate(),
+            onTap: () => _pickDate(accent),
             borderRadius: BorderRadius.circular(16),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
               decoration: BoxDecoration(
-                color: AppColors.bgElevated,
+                color: p.bgElevated,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.cardBorder),
+                border: Border.all(color: p.cardBorder),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      size: 17, color: AppColors.textMuted),
+                  Icon(Icons.calendar_today_outlined,
+                      size: 17, color: p.textMuted),
                   const SizedBox(width: 10),
-                  Text(DateFormat('EEEE، d MMMM y', 'ar').format(_selectedDate),
-                      style: const TextStyle(
-                          color: AppColors.textPrimary, fontSize: 14)),
+                  Text(
+                      DateFormat('EEEE، d MMMM y', 'ar').format(_selectedDate),
+                      style: TextStyle(color: p.textPrimary, fontSize: 14)),
                   const Spacer(),
-                  const Icon(Icons.chevron_left,
-                      size: 20, color: AppColors.textMuted),
+                  Icon(Icons.chevron_left, size: 20, color: p.textMuted),
                 ],
               ),
             ),
@@ -140,9 +140,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ElevatedButton(
             onPressed: _save,
             style: ElevatedButton.styleFrom(
-              backgroundColor: _accent,
+              backgroundColor: accent,
               foregroundColor: Colors.white,
-              disabledBackgroundColor: AppColors.card,
               textStyle: const TextStyle(
                   fontSize: 15, fontWeight: FontWeight.w700),
             ),
@@ -153,7 +152,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Future<void> _pickDate() async {
+  Future<void> _pickDate(Color accent) async {
+    final p = context.palette;
     final d = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -164,10 +164,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       confirmText: 'موافق',
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: _accent,
-            surface: AppColors.card,
+          colorScheme: ColorScheme(
+            brightness: Theme.of(context).brightness,
+            primary: accent,
+            secondary: accent,
+            surface: p.card,
             onPrimary: Colors.white,
+            onSecondary: Colors.white,
+            onSurface: p.textPrimary,
+            onError: Colors.white,
+            error: p.expense,
           ),
         ),
         child: child!,
@@ -185,6 +191,7 @@ class _AmountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final fmt = NumberFormat.currency(locale: 'ar', symbol: 'ج.م');
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
@@ -192,7 +199,7 @@ class _AmountCard extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             accent.withValues(alpha: 0.3),
-            AppColors.bgElevated,
+            p.bgElevated,
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -202,9 +209,8 @@ class _AmountCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Text('المبلغ',
-              style: TextStyle(
-                  fontSize: 12, color: AppColors.textSecondary)),
+          Text('المبلغ',
+              style: TextStyle(fontSize: 12, color: p.textSecondary)),
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -220,29 +226,29 @@ class _AmountCard extends StatelessWidget {
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                   ],
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 34, fontWeight: FontWeight.w800),
-                  decoration: const InputDecoration(
+                  style: TextStyle(
+                      fontSize: 34, fontWeight: FontWeight.w800, color: p.textPrimary),
+                  decoration: InputDecoration(
                     border: InputBorder.none,
                     filled: false,
                     hintText: '0',
                     hintStyle: TextStyle(
                         fontSize: 30,
-                        color: AppColors.textMuted,
+                        color: p.textMuted,
                         fontWeight: FontWeight.w700),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 6, right: 6),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6, right: 6),
                 child: Text('ج.م',
-                    style: TextStyle(color: AppColors.textSecondary)),
+                    style: TextStyle(color: p.textSecondary)),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(fmt.format(0), style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+          Text(fmt.format(0), style: TextStyle(fontSize: 12, color: p.textMuted)),
         ],
       ),
     );
@@ -295,17 +301,16 @@ class _CategoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: selected
-              ? cat.color.withValues(alpha: 0.22)
-              : AppColors.bgElevated,
+          color: selected ? cat.color.withValues(alpha: 0.22) : p.bgElevated,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? cat.color : AppColors.cardBorder,
+            color: selected ? cat.color : p.cardBorder,
             width: selected ? 1.4 : 1,
           ),
         ),
@@ -319,7 +324,7 @@ class _CategoryItem extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 10,
-                  color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+                  color: selected ? p.textPrimary : p.textSecondary,
                 )),
           ],
         ),
