@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/strings.dart';
 import '../models/transaction.dart';
 import '../store/masrofy_store.dart';
 import '../theme/app_theme.dart';
@@ -44,9 +45,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Future<void> _save() async {
+    final s = Strings(widget.store.language);
     final amount = double.tryParse(_amountController.text.trim());
     if (amount == null || amount <= 0) {
-      _snack('أدخل مبلغاً صحيحاً');
+      _snack(s.enterValidAmount);
       return;
     }
     final tx = Transaction(
@@ -69,11 +71,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    final s = Strings(widget.store.language);
     final accent = _isIncome ? p.income : p.expense;
     return Scaffold(
       backgroundColor: p.bg,
       appBar: AppBar(
-        title: Text(_isIncome ? 'اضافة دخل' : 'اضافة مصروف'),
+        title: Text(_isIncome ? s.addIncome : s.addExpense),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
@@ -82,9 +85,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
-          _AmountCard(accent: accent, controller: _amountController),
+          _AmountCard(accent: accent, controller: _amountController, strings: s),
           const SizedBox(height: 20),
-          Text('الفئة',
+          Text(s.category,
               style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -93,10 +96,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           _CategoryGrid(
             type: widget.type,
             selected: _selectedCategory,
+            strings: s,
             onSelect: (id) => setState(() => _selectedCategory = id),
           ),
           const SizedBox(height: 20),
-          Text('التاريخ',
+          Text(s.date,
               style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -118,7 +122,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       size: 17, color: p.textMuted),
                   const SizedBox(width: 10),
                   Text(
-                      DateFormat('EEEE، d MMMM y', 'ar').format(_selectedDate),
+                      widget.store.language == 'ar'
+                          ? DateFormat('EEEE، d MMMM y', 'ar').format(_selectedDate)
+                          : DateFormat('EEEE, d MMMM y', 'en').format(_selectedDate),
                       style: TextStyle(color: p.textPrimary, fontSize: 14)),
                   const Spacer(),
                   Icon(Icons.chevron_left, size: 20, color: p.textMuted),
@@ -130,10 +136,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           TextField(
             controller: _noteController,
             textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              labelText: 'ملاحظة (اختياري)',
-              prefixIcon: Icon(Icons.notes_outlined),
-              hintText: 'مثال: فاتورة الكهرباء',
+            decoration: InputDecoration(
+              labelText: s.note,
+              prefixIcon: const Icon(Icons.notes_outlined),
+              hintText: s.noteHint,
             ),
           ),
           const SizedBox(height: 22),
@@ -145,7 +151,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               textStyle: const TextStyle(
                   fontSize: 15, fontWeight: FontWeight.w700),
             ),
-            child: const Text('حفظ العملية'),
+            child: Text(s.saveTransaction),
           ),
         ],
       ),
@@ -154,14 +160,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Future<void> _pickDate(Color accent) async {
     final p = context.palette;
+    final s = Strings(widget.store.language);
     final d = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 1)),
-      helpText: 'اختر التاريخ',
-      cancelText: 'إلغاء',
-      confirmText: 'موافق',
+      helpText: s.chooseDate,
+      cancelText: s.cancel,
+      confirmText: s.ok,
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme(
@@ -186,13 +193,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 class _AmountCard extends StatelessWidget {
   final Color accent;
   final TextEditingController controller;
+  final Strings strings;
 
-  const _AmountCard({required this.accent, required this.controller});
+  const _AmountCard({
+    required this.accent,
+    required this.controller,
+    required this.strings,
+  });
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final fmt = NumberFormat.currency(locale: 'ar', symbol: 'ج.م');
+    final s = strings;
+    final fmt = NumberFormat.currency(
+        locale: s.currencyLocale(), symbol: s.currencySymbol());
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       decoration: BoxDecoration(
@@ -209,8 +223,7 @@ class _AmountCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text('المبلغ',
-              style: TextStyle(fontSize: 12, color: p.textSecondary)),
+          Text(s.amount, style: TextStyle(fontSize: 12, color: p.textSecondary)),
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -227,7 +240,9 @@ class _AmountCard extends StatelessWidget {
                   ],
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 34, fontWeight: FontWeight.w800, color: p.textPrimary),
+                      fontSize: 34,
+                      fontWeight: FontWeight.w800,
+                      color: p.textPrimary),
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     filled: false,
@@ -242,7 +257,7 @@ class _AmountCard extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 6, right: 6),
-                child: Text('ج.م',
+                child: Text(s.currencySymbol(),
                     style: TextStyle(color: p.textSecondary)),
               ),
             ],
@@ -258,11 +273,13 @@ class _AmountCard extends StatelessWidget {
 class _CategoryGrid extends StatelessWidget {
   final TxType type;
   final String selected;
+  final Strings strings;
   final ValueChanged<String> onSelect;
 
   const _CategoryGrid({
     required this.type,
     required this.selected,
+    required this.strings,
     required this.onSelect,
   });
 
@@ -281,6 +298,7 @@ class _CategoryGrid extends StatelessWidget {
           _CategoryItem(
             cat: c,
             selected: c.id == selected,
+            strings: strings,
             onTap: () => onSelect(c.id),
           ),
       ],
@@ -291,11 +309,13 @@ class _CategoryGrid extends StatelessWidget {
 class _CategoryItem extends StatelessWidget {
   final TxCategory cat;
   final bool selected;
+  final Strings strings;
   final VoidCallback onTap;
 
   const _CategoryItem({
     required this.cat,
     required this.selected,
+    required this.strings,
     required this.onTap,
   });
 
@@ -319,7 +339,7 @@ class _CategoryItem extends StatelessWidget {
           children: [
             Icon(cat.icon, color: cat.color, size: 22),
             const SizedBox(height: 6),
-            Text(cat.name,
+            Text(cat.localName(strings.language),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

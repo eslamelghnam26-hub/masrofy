@@ -8,10 +8,12 @@ import '../models/transaction.dart';
 class MasrofyStore extends ChangeNotifier {
   static const _key = 'masrofy.transactions.v1';
   static const _themeKey = 'masrofy.darkMode.v1';
+  static const _langKey = 'masrofy.language.v1';
 
   List<Transaction> _transactions = [];
   bool _loaded = false;
   bool _darkMode = true;
+  String _language = 'ar';
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
 
   List<Transaction> get transactions => List.unmodifiable(_transactions);
@@ -19,6 +21,8 @@ class MasrofyStore extends ChangeNotifier {
   bool get loaded => _loaded;
 
   bool get darkMode => _darkMode;
+
+  String get language => _language;
 
   DateTime get selectedMonth => _selectedMonth;
 
@@ -57,10 +61,19 @@ class MasrofyStore extends ChangeNotifier {
     await prefs.setBool(_themeKey, _darkMode);
   }
 
+  Future<void> setLanguage(String lang) async {
+    if (_language == lang) return;
+    _language = lang;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_langKey, lang);
+  }
+
   Future<void> load() async {
     if (_loaded) return;
     final prefs = await SharedPreferences.getInstance();
     _darkMode = prefs.getBool(_themeKey) ?? true;
+    _language = prefs.getString(_langKey) ?? 'ar';
     final raw = prefs.getString(_key);
     if (raw != null) {
       try {

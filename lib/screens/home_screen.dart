@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/strings.dart';
 import '../models/transaction.dart';
 import '../store/masrofy_store.dart';
 import '../theme/app_theme.dart';
@@ -12,12 +13,9 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.store});
 
   Future<void> _pickMonth(BuildContext context) async {
+    final s = Strings(store.language);
     final now = DateTime.now();
     var year = store.selectedMonth.year;
-    final months = {
-      1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 5: 'مايو', 6: 'يونيو',
-      7: 'يوليو', 8: 'أغسطس', 9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر',
-    };
 
     final selected = await showModalBottomSheet<DateTime>(
       context: context,
@@ -46,11 +44,24 @@ class HomeScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
+                  Text(
+                    s.pickMonthTitle,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       IconButton(
                         onPressed: () => setSheetState(() => year--),
-                        icon: const Icon(Icons.chevron_right),
+                        icon: Icon(
+                          store.language == 'ar'
+                              ? Icons.chevron_right
+                              : Icons.chevron_left,
+                        ),
                       ),
                       Expanded(
                         child: Center(
@@ -68,7 +79,11 @@ class HomeScreen extends StatelessWidget {
                         onPressed: year < now.year
                             ? () => setSheetState(() => year++)
                             : null,
-                        icon: const Icon(Icons.chevron_left),
+                        icon: Icon(
+                          store.language == 'ar'
+                              ? Icons.chevron_left
+                              : Icons.chevron_right,
+                        ),
                       ),
                     ],
                   ),
@@ -80,12 +95,13 @@ class HomeScreen extends StatelessWidget {
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
                     childAspectRatio: 1.7,
-                    children: months.entries.map((entry) {
-                      final month = DateTime(year, entry.key, 1);
+                    children: List.generate(12, (i) {
+                      final month = DateTime(year, i + 1, 1);
                       final isSelected =
                           month.year == store.selectedMonth.year &&
                               month.month == store.selectedMonth.month;
                       final isFuture = month.isAfter(DateTime(now.year, now.month, 1));
+                      final monthName = DateFormat('MMMM', store.language).format(month);
                       return Material(
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
@@ -98,7 +114,7 @@ class HomeScreen extends StatelessWidget {
                               : null,
                           child: Center(
                             child: Text(
-                              entry.value,
+                              monthName,
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
@@ -110,7 +126,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                   ),
                 ],
               ),
@@ -125,16 +141,94 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _pickLanguage(BuildContext context) async {
+    final s = Strings(store.language);
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Container(
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Theme.of(context).dividerColor),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+s.languageLabel,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.language),
+                title: Text(s.arabic,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                trailing: store.language == 'ar'
+                    ? Icon(Icons.check_circle,
+                        color: Theme.of(context).colorScheme.primary)
+                    : null,
+                onTap: () async {
+                  Navigator.of(sheetContext).pop();
+                  if (store.language != 'ar') {
+                    await store.setLanguage('ar');
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.language),
+                title: Text(s.english,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                trailing: store.language == 'en'
+                    ? Icon(Icons.check_circle,
+                        color: Theme.of(context).colorScheme.primary)
+                    : null,
+                onTap: () async {
+                  Navigator.of(sheetContext).pop();
+                  if (store.language != 'en') {
+                    await store.setLanguage('en');
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final s = Strings(store.language);
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            _Header(store: store, onPickMonth: () => _pickMonth(context)),
-            Expanded(child: _TransactionFeed(store: store)),
+            _Header(
+              store: store,
+              strings: s,
+              onPickMonth: () => _pickMonth(context),
+              onPickLanguage: () => _pickLanguage(context),
+            ),
+            Expanded(
+              child: _TransactionFeed(
+                store: store,
+                strings: s,
+              ),
+            ),
           ],
         ),
       ),
@@ -144,18 +238,27 @@ class HomeScreen extends StatelessWidget {
 
 class _Header extends StatelessWidget {
   final MasrofyStore store;
+  final Strings strings;
   final VoidCallback onPickMonth;
+  final VoidCallback onPickLanguage;
 
-  const _Header({required this.store, required this.onPickMonth});
+  const _Header({
+    required this.store,
+    required this.strings,
+    required this.onPickMonth,
+    required this.onPickLanguage,
+  });
 
   String _monthLabel(DateTime month) {
-    return DateFormat('MMMM y', 'ar').format(month);
+    return DateFormat('MMMM y', store.language).format(month);
   }
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final fmt = NumberFormat.currency(locale: 'ar', symbol: 'ج.م');
+    final s = strings;
+    final fmt = NumberFormat.currency(
+        locale: s.currencyLocale(), symbol: s.currencySymbol());
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Column(
@@ -168,7 +271,7 @@ class _Header extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [p.accent, Color(0xFF4C67F5)],
+                    colors: [p.accent, const Color(0xFF4C67F5)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -182,18 +285,18 @@ class _Header extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('مصروفي',
+                    Text(s.appName,
                         style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
                             color: p.textPrimary)),
-                    Text('لحظاتك المالية ببساطة',
+                    Text(s.appTagline,
                         style: TextStyle(fontSize: 12, color: p.textSecondary)),
                   ],
                 ),
               ),
               IconButton(
-                tooltip: store.darkMode ? 'الوضع الفاتح' : 'الوضع الداكن',
+                tooltip: store.darkMode ? s.lightMode : s.darkMode,
                 onPressed: () => store.toggleTheme(),
                 icon: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
@@ -210,6 +313,15 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
+              IconButton(
+                tooltip: s.language,
+                onPressed: onPickLanguage,
+                icon: Icon(
+                  store.language == 'ar' ? Icons.translate : Icons.language,
+                  size: 20,
+                  color: p.textSecondary,
+                ),
+              ),
               Material(
                 color: p.bgElevated,
                 borderRadius: BorderRadius.circular(12),
@@ -224,8 +336,7 @@ class _Header extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.calendar_month_outlined,
-                            size: 13, color: p.textSecondary),
+                        const Icon(Icons.calendar_month_outlined, size: 13),
                         const SizedBox(width: 6),
                         Text(_monthLabel(store.selectedMonth),
                             style: TextStyle(fontSize: 12, color: p.textSecondary)),
@@ -268,12 +379,14 @@ class _Header extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text('رصيدك الحالي',
+                        Text(s.currentBalance,
                             style: TextStyle(
-                                fontSize: 13, color: store.darkMode ? p.textSecondary : p.textMuted)),
+                                fontSize: 13,
+                                color: store.darkMode ? p.textSecondary : p.textMuted)),
                         const Spacer(),
                         Icon(Icons.visibility_outlined,
-                            size: 15, color: store.darkMode ? p.textMuted : p.textSecondary),
+                            size: 15,
+                            color: store.darkMode ? p.textMuted : p.textSecondary),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -281,13 +394,13 @@ class _Header extends StatelessWidget {
                         style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.w800,
-                            color: store.darkMode ? p.textPrimary : p.textPrimary)),
+                            color: p.textPrimary)),
                     const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
                           child: _MiniStat(
-                            label: 'الدخل',
+                            label: s.income,
                             amount: fmt.format(store.totalIncome),
                             color: p.income,
                             icon: Icons.arrow_downward_rounded,
@@ -296,7 +409,7 @@ class _Header extends StatelessWidget {
                         const SizedBox(width: 10),
                         Expanded(
                           child: _MiniStat(
-                            label: 'المصروفات',
+                            label: s.expenses,
                             amount: fmt.format(store.totalExpense),
                             color: p.expense,
                             icon: Icons.arrow_upward_rounded,
@@ -314,7 +427,7 @@ class _Header extends StatelessWidget {
             children: [
               Expanded(
                 child: _ActionButton(
-                  label: 'اضافة دخل',
+                  label: s.addIncome,
                   icon: Icons.add,
                   income: true,
                   onTap: () async {
@@ -328,7 +441,7 @@ class _Header extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _ActionButton(
-                  label: 'اضافة مصروف',
+                  label: s.addExpense,
                   icon: Icons.remove,
                   income: false,
                   onTap: () async {
@@ -386,8 +499,7 @@ class _MiniStat extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: TextStyle(fontSize: 11, color: p.textMuted)),
+                Text(label, style: TextStyle(fontSize: 11, color: p.textMuted)),
                 const SizedBox(height: 2),
                 Text(amount,
                     maxLines: 1,
@@ -458,17 +570,19 @@ class _ActionButton extends StatelessWidget {
 
 class _TransactionFeed extends StatelessWidget {
   final MasrofyStore store;
+  final Strings strings;
 
-  const _TransactionFeed({required this.store});
+  const _TransactionFeed({required this.store, required this.strings});
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    final s = strings;
     return AnimatedBuilder(
       animation: store,
       builder: (context, _) {
         final items = store.monthTransactions();
-        final monthLabel = DateFormat('MMMM y', 'ar').format(store.selectedMonth);
+        final monthLabel = DateFormat('MMMM y', store.language).format(store.selectedMonth);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,7 +597,7 @@ class _TransactionFeed extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           color: p.textMuted)),
                   const Spacer(),
-                  Text('${items.length} عملية',
+                  Text(s.transactionsCount(items.length),
                       style: TextStyle(fontSize: 11, color: p.textMuted)),
                 ],
               ),
@@ -497,7 +611,7 @@ class _TransactionFeed extends StatelessWidget {
                       Icon(Icons.receipt_long_outlined,
                           size: 42, color: p.textMuted.withValues(alpha: 0.5)),
                       const SizedBox(height: 10),
-                      Text('لا توجد عمليات في هذا الشهر',
+                      Text(s.noTransactionsThisMonth,
                           style: TextStyle(color: p.textMuted)),
                     ],
                   ),
@@ -525,6 +639,7 @@ class _TransactionFeed extends StatelessWidget {
                       final tx = items[i];
                       return _TxTile(
                         tx: tx,
+                        strings: s,
                         onDelete: () => store.remove(tx.id),
                       );
                     },
@@ -540,17 +655,19 @@ class _TransactionFeed extends StatelessWidget {
 
 class _TxTile extends StatelessWidget {
   final Transaction tx;
+  final Strings strings;
   final VoidCallback onDelete;
 
-  const _TxTile({required this.tx, required this.onDelete});
+  const _TxTile({required this.tx, required this.strings, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    final s = strings;
     final cat = AppCategory.byId(tx.categoryId, tx.type);
     final isIncome = tx.type == TxType.income;
     final sign = isIncome ? '+' : '-';
-    final fmt = NumberFormat.decimalPattern('ar');
+    final fmt = NumberFormat.decimalPattern(s.dateLocale());
 
     return Dismissible(
       key: ValueKey(tx.id),
@@ -583,7 +700,7 @@ class _TxTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(cat.name,
+                  Text(cat.localName(s.language),
                       style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -591,7 +708,7 @@ class _TxTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     tx.note.isEmpty
-                        ? DateFormat('d MMMM', 'ar').format(tx.date)
+                        ? DateFormat('d MMMM', s.dateLocale()).format(tx.date)
                         : tx.note,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -604,7 +721,7 @@ class _TxTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '$sign${fmt.format(tx.amount)} ج.م',
+                  '$sign${fmt.format(tx.amount)} ${s.currencySymbol()}',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
@@ -612,7 +729,7 @@ class _TxTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(DateFormat('d MMM', 'ar').format(tx.date),
+                Text(DateFormat('d MMM', s.dateLocale()).format(tx.date),
                     style: TextStyle(fontSize: 10, color: p.textMuted)),
               ],
             ),

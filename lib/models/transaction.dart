@@ -5,35 +5,39 @@ enum TxType { income, expense }
 class TxCategory {
   final String id;
   final String name;
+  final String nameEn;
   final IconData icon;
   final Color color;
 
   const TxCategory({
     required this.id,
     required this.name,
+    required this.nameEn,
     required this.icon,
     required this.color,
   });
+
+  String localName(String language) => language == 'ar' ? name : nameEn;
 }
 
 class AppCategory {
   static const List<TxCategory> income = [
-    TxCategory(id: 'salary', name: 'راتب', icon: Icons.payments_outlined, color: Color(0xFF4CAF7D)),
-    TxCategory(id: 'bonus', name: 'مكافأة', icon: Icons.card_giftcard, color: Color(0xFFB78B4B)),
-    TxCategory(id: 'freelance', name: 'عمل حر', icon: Icons.work_outline, color: Color(0xFF6FA8DC)),
-    TxCategory(id: 'invest', name: 'استثمار', icon: Icons.trending_up, color: Color(0xFF9B8AFB)),
-    TxCategory(id: 'otherinc', name: 'أخرى', icon: Icons.add_circle_outline, color: Color(0xFF8D8D8D)),
+    TxCategory(id: 'salary', name: 'راتب', nameEn: 'Salary', icon: Icons.payments_outlined, color: Color(0xFF4CAF7D)),
+    TxCategory(id: 'bonus', name: 'مكافأة', nameEn: 'Bonus', icon: Icons.card_giftcard, color: Color(0xFFB78B4B)),
+    TxCategory(id: 'freelance', name: 'عمل حر', nameEn: 'Freelance', icon: Icons.work_outline, color: Color(0xFF6FA8DC)),
+    TxCategory(id: 'invest', name: 'استثمار', nameEn: 'Investment', icon: Icons.trending_up, color: Color(0xFF9B8AFB)),
+    TxCategory(id: 'otherinc', name: 'أخرى', nameEn: 'Other', icon: Icons.add_circle_outline, color: Color(0xFF8D8D8D)),
   ];
 
   static const List<TxCategory> expense = [
-    TxCategory(id: 'food', name: 'طعام ومشروبات', icon: Icons.restaurant_outlined, color: Color(0xFFEC6B5E)),
-    TxCategory(id: 'transport', name: 'مواصلات', icon: Icons.directions_car_outlined, color: Color(0xFF6FA8DC)),
-    TxCategory(id: 'bills', name: 'فواتير', icon: Icons.receipt_long_outlined, color: Color(0xFFE0A458)),
-    TxCategory(id: 'shopping', name: 'تسوق', icon: Icons.shopping_bag_outlined, color: Color(0xFFB78B4B)),
-    TxCategory(id: 'health', name: 'صحة', icon: Icons.medical_services_outlined, color: Color(0xFFEC6B5E)),
-    TxCategory(id: 'education', name: 'تعليم', icon: Icons.school_outlined, color: Color(0xFF6FA8DC)),
-    TxCategory(id: 'entertain', name: 'ترفيه', icon: Icons.movie_outlined, color: Color(0xFF9B8AFB)),
-    TxCategory(id: 'other', name: 'أخرى', icon: Icons.more_horiz, color: Color(0xFF8D8D8D)),
+    TxCategory(id: 'food', name: 'طعام ومشروبات', nameEn: 'Food & Drinks', icon: Icons.restaurant_outlined, color: Color(0xFFEC6B5E)),
+    TxCategory(id: 'transport', name: 'مواصلات', nameEn: 'Transport', icon: Icons.directions_car_outlined, color: Color(0xFF6FA8DC)),
+    TxCategory(id: 'bills', name: 'فواتير', nameEn: 'Bills', icon: Icons.receipt_long_outlined, color: Color(0xFFE0A458)),
+    TxCategory(id: 'shopping', name: 'تسوق', nameEn: 'Shopping', icon: Icons.shopping_bag_outlined, color: Color(0xFFB78B4B)),
+    TxCategory(id: 'health', name: 'صحة', nameEn: 'Health', icon: Icons.medical_services_outlined, color: Color(0xFFEC6B5E)),
+    TxCategory(id: 'education', name: 'تعليم', nameEn: 'Education', icon: Icons.school_outlined, color: Color(0xFF6FA8DC)),
+    TxCategory(id: 'entertain', name: 'ترفيه', nameEn: 'Entertainment', icon: Icons.movie_outlined, color: Color(0xFF9B8AFB)),
+    TxCategory(id: 'other', name: 'أخرى', nameEn: 'Other', icon: Icons.more_horiz, color: Color(0xFF8D8D8D)),
   ];
 
   static TxCategory byId(String id, TxType type) {
