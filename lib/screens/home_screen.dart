@@ -384,13 +384,40 @@ class _Header extends StatelessWidget {
                                 fontSize: 13,
                                 color: store.darkMode ? p.textSecondary : p.textMuted)),
                         const Spacer(),
+                        Material(
+                          color: p.bgElevated,
+                          borderRadius: BorderRadius.circular(20),
+                          child: InkWell(
+                            onTap: store.toggleSummaryScope,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.calendar_month_outlined,
+                                      size: 13, color: p.accent),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    store.summaryAllTime
+                                        ? s.periodAllTime
+                                        : s.periodThisMonth,
+                                    style: TextStyle(fontSize: 11, color: p.textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Icon(Icons.visibility_outlined,
                             size: 15,
                             color: store.darkMode ? p.textMuted : p.textSecondary),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(fmt.format(store.balance),
+                    Text(fmt.format(store.shownBalance),
                         style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.w800,
@@ -401,18 +428,22 @@ class _Header extends StatelessWidget {
                         Expanded(
                           child: _MiniStat(
                             label: s.income,
-                            amount: fmt.format(store.totalIncome),
+                            amount: fmt.format(store.shownIncome),
                             color: p.income,
                             icon: Icons.arrow_downward_rounded,
+                            active: store.summaryAllTime,
+                            onTap: store.toggleSummaryScope,
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _MiniStat(
                             label: s.expenses,
-                            amount: fmt.format(store.totalExpense),
+                            amount: fmt.format(store.shownExpense),
                             color: p.expense,
                             icon: Icons.arrow_upward_rounded,
+                            active: store.summaryAllTime,
+                            onTap: store.toggleSummaryScope,
                           ),
                         ),
                       ],
@@ -465,53 +496,70 @@ class _MiniStat extends StatelessWidget {
   final String amount;
   final Color color;
   final IconData icon;
+  final bool active;
+  final VoidCallback onTap;
 
   const _MiniStat({
     required this.label,
     required this.amount,
     required this.color,
     required this.icon,
+    this.active = false,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: p.bgElevated,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: p.cardBorder),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 16),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: TextStyle(fontSize: 11, color: p.textMuted)),
-                const SizedBox(height: 2),
-                Text(amount,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: color)),
-              ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: p.bgElevated,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: active ? color.withValues(alpha: 0.8) : p.cardBorder,
+              width: active ? 1.4 : 1,
             ),
           ),
-        ],
+          child: Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 16),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
+                        style: TextStyle(fontSize: 11, color: p.textMuted)),
+                    const SizedBox(height: 2),
+                    Text(amount,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: color)),
+                  ],
+                ),
+              ),
+              Icon(Icons.sync_alt_outlined,
+                  size: 12, color: p.textMuted.withValues(alpha: 0.6)),
+            ],
+          ),
+        ),
       ),
     );
   }

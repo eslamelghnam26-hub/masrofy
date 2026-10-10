@@ -21,7 +21,6 @@ void main() async {
     await store.setLoggedIn(true);
   }
 
-  await store.seedIfEmpty();
   runApp(MasrofyApp(store: store));
 }
 

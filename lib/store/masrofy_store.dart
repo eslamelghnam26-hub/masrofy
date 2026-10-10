@@ -15,6 +15,7 @@ class MasrofyStore extends ChangeNotifier {
   bool _loaded = false;
   bool _darkMode = true;
   bool _loggedIn = false;
+  bool _summaryAllTime = false;
   String _language = 'ar';
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
 
@@ -30,6 +31,9 @@ class MasrofyStore extends ChangeNotifier {
 
   DateTime get selectedMonth => _selectedMonth;
 
+  /// وضع الكروت: false = الشهر المحدد فقط، true = كل الفترات.
+  bool get summaryAllTime => _summaryAllTime;
+
   double get totalIncome =>
       _transactions.where((t) => t.type == TxType.income).fold(0, (s, t) => s + t.amount);
 
@@ -37,6 +41,43 @@ class MasrofyStore extends ChangeNotifier {
       _transactions.where((t) => t.type == TxType.expense).fold(0, (s, t) => s + t.amount);
 
   double get balance => totalIncome - totalExpense;
+
+  double get monthlyIncome {
+    final month = _selectedMonth;
+    return _transactions
+        .where((t) =>
+            t.type == TxType.income &&
+            t.date.year == month.year &&
+            t.date.month == month.month)
+        .fold(0, (s, t) => s + t.amount);
+  }
+
+  double get monthlyExpense {
+    final month = _selectedMonth;
+    return _transactions
+        .where((t) =>
+            t.type == TxType.expense &&
+            t.date.year == month.year &&
+            t.date.month == month.month)
+        .fold(0, (s, t) => s + t.amount);
+  }
+
+  double get monthlyBalance => monthlyIncome - monthlyExpense;
+
+  /// قيمة الدخل المعروضة بحسب نطاق الكروت الحالي.
+  double get shownIncome => _summaryAllTime ? totalIncome : monthlyIncome;
+
+  /// قيمة المصروفات المعروضة بحسب نطاق الكروت الحالي.
+  double get shownExpense => _summaryAllTime ? totalExpense : monthlyExpense;
+
+  /// الرصيد المعروض بحسب نطاق الكروت الحالي.
+  double get shownBalance => _summaryAllTime ? balance : monthlyBalance;
+
+  /// تبديل نطاق الحساب (الشهر المحدد / كل الفترات).
+  Future<void> toggleSummaryScope() async {
+    _summaryAllTime = !_summaryAllTime;
+    notifyListeners();
+  }
 
   List<Transaction> sorted() {
     final list = List<Transaction>.from(_transactions);
@@ -116,55 +157,5 @@ class MasrofyStore extends ChangeNotifier {
       _key,
       jsonEncode(_transactions.map((t) => t.toJson()).toList()),
     );
-  }
-
-  /// بيانات تجريبية تُحمّل أول مرة حتى لا تفتح شاشة فارغة.
-  Future<void> seedIfEmpty() async {
-    if (_transactions.isNotEmpty) return;
-    final now = DateTime.now();
-    final fallback = [
-      Transaction(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        type: TxType.income,
-        categoryId: 'salary',
-        amount: 12000,
-        date: DateTime(now.year, now.month, 1),
-        note: 'الراتب الشهري',
-      ),
-      Transaction(
-        id: (DateTime.now().millisecondsSinceEpoch + 1).toString(),
-        type: TxType.expense,
-        categoryId: 'bills',
-        amount: 1500,
-        date: DateTime(now.year, now.month, 3),
-        note: 'الكهرباء والإنترنت',
-      ),
-      Transaction(
-        id: (DateTime.now().millisecondsSinceEpoch + 2).toString(),
-        type: TxType.expense,
-        categoryId: 'food',
-        amount: 850,
-        date: DateTime(now.year, now.month, 5),
-        note: 'تسوق الأسبوعي',
-      ),
-      Transaction(
-        id: (DateTime.now().millisecondsSinceEpoch + 3).toString(),
-        type: TxType.expense,
-        categoryId: 'transport',
-        amount: 400,
-        date: DateTime(now.year, now.month, 7),
-        note: 'بنزين',
-      ),
-      Transaction(
-        id: (DateTime.now().millisecondsSinceEpoch + 4).toString(),
-        type: TxType.income,
-        categoryId: 'freelance',
-        amount: 3200,
-        date: DateTime(now.year, now.month, 9),
-        note: 'مشروع جانبي',
-      ),
-    ];
-    _transactions = fallback;
-    await _persist();
   }
 }

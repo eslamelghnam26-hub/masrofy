@@ -45,6 +45,13 @@ class Strings {
 
   String get thisMonth => isAr ? 'هذا الشهر' : 'This Month';
 
+  String get periodThisMonth => isAr ? 'هذا الشهر' : 'This Month';
+
+  String get periodAllTime => isAr ? 'كل الفترات' : 'All Time';
+
+  String get periodHint =>
+      isAr ? 'اضغط على الكروت للتبديل' : 'Tap the cards to switch';
+
   String get chooseDate => isAr ? 'اختر التاريخ' : 'Select date';
 
   String get cancel => isAr ? 'إلغاء' : 'Cancel';

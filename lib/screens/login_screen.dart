@@ -18,6 +18,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  static const _accent = Color(0xFF7C5CFC);
+  static const _border = Color(0xFFE3E3EC);
+  static const _softField = Color(0xFFF5F5F8);
+
   final _phoneController = TextEditingController();
   final _phoneFocus = FocusNode();
   bool _submitting = false;
@@ -73,10 +77,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
     final s = Strings(widget.store.language);
+    // شاشة الدخول دائماً بخلفية بيضاء صلبة مهما كان الثيم الحالي.
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -92,13 +96,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(28),
                       gradient: LinearGradient(
-                        colors: [p.accent, const Color(0xFF4C67F5)],
+                        colors: [_accent, const Color(0xFF4C67F5)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: p.accent.withValues(alpha: 0.4),
+                          color: _accent.withValues(alpha: 0.4),
                           blurRadius: 30,
                           offset: const Offset(0, 12),
                         ),
@@ -111,39 +115,42 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 22),
                 Text(
                   s.appName,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.w900,
-                    color: p.textPrimary,
+                    color: Color(0xFF17171C),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   s.loginTitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: p.textSecondary),
+                  style: const TextStyle(
+                      fontSize: 14, color: Color(0xFF55555E)),
                 ),
                 const SizedBox(height: 36),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: p.bgElevated,
+                    color: _softField,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: p.cardBorder),
+                    border: Border.all(color: _border),
                   ),
                   child: Row(
                     children: [
-                      Text('+20',
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: p.textPrimary)),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 14),
+                        child: Text('+20',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF17171C))),
+                      ),
                       Container(
                         margin:
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                            const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                         width: 1,
                         height: 24,
-                        color: p.cardBorder,
+                        color: _border,
                       ),
                       Expanded(
                         child: TextField(
@@ -157,19 +164,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             DigitInputFormatter(),
                             LengthLimitingTextInputFormatter(11),
                           ],
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: p.textPrimary),
-                          decoration: InputDecoration(
+                              color: Color(0xFF17171C)),
+                          decoration: const InputDecoration(
                             counterText: '',
-                            hintText: s.phoneHint,
-                            hintStyle:
-                                TextStyle(fontSize: 15, color: p.textMuted),
+                            hintText: '010',
+                            hintStyle: TextStyle(
+                                fontSize: 15, color: Color(0xFF8A8A94)),
                             border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            isCollapsed: true,
                           ),
                         ),
                       ),
+                      const SizedBox(width: 12),
                     ],
                   ),
                 ),
@@ -179,18 +189,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: p.accentSoft,
+                      color: LightColors.accentSoft,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: p.accent.withValues(alpha: 0.4)),
+                      border: Border.all(color: _accent.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline, size: 16, color: p.accent),
+                        Icon(Icons.info_outline, size: 16, color: _accent),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             s.demoModeNotice,
-                            style: TextStyle(fontSize: 12, color: p.accent),
+                            style: const TextStyle(fontSize: 12, color: _accent),
                           ),
                         ),
                       ],
