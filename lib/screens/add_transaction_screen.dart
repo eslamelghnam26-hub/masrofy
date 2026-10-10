@@ -285,7 +285,7 @@ class _CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categories = type == TxType.income ? AppCategory.income : AppCategory.expense;
+    final categories = AppCategory.byType(type);
     return GridView.count(
       crossAxisCount: 4,
       shrinkWrap: true,

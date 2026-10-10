@@ -164,4 +164,61 @@ class Strings {
 
   String get monthTransactionsTitle =>
       isAr ? 'معاملات الشهر' : 'Transactions this month';
+
+  String get budgetTitle => isAr ? 'الميزانية' : 'Budget';
+
+  String get monthlyBudget => isAr ? 'الميزانية الشهرية' : 'Monthly budget';
+
+  String get manageBudget => isAr ? 'إدارة الميزانية' : 'Manage budget';
+
+  String get budgetInfo => isAr
+      ? 'حدّد حد شهري لكل تصنيف بحرية كاملة — بدون أي قيود مفروضة'
+      : 'Set a monthly limit for each category with full freedom — no fixed values';
+
+  String get addCategory => isAr ? 'إضافة تصنيف' : 'Add category';
+
+  String get newCategory => isAr ? 'تصنيف جديد' : 'New category';
+
+  String get categoryName => isAr ? 'اسم التصنيف' : 'Category name';
+
+  String get categoryNameHint => isAr ? 'مثال: قهوة' : 'e.g. Coffee';
+
+  String get monthlyLimit => isAr ? 'الحد الشهري' : 'Monthly limit';
+
+  String get limitEmptyHint =>
+      isAr ? 'اتركه فاضياً لإزالة الحد' : 'Leave empty to remove the limit';
+
+  String get noLimit => isAr ? 'بدون حد' : 'No limit';
+
+  String get spent => isAr ? 'المنصرف' : 'Spent';
+
+  String get remaining => isAr ? 'المتبقي' : 'Remaining';
+
+  String get totalBudget => isAr ? 'إجمالي الميزانية' : 'Total budget';
+
+  String get budgetEmpty =>
+      isAr ? 'لسه محدّدتش ميزانية' : 'No budget set yet';
+
+  String get budgetEmptyHint => isAr
+      ? 'اضغط إدارة الميزانية وحدّد حد شهري للتصنيفات اللي تحبها'
+      : 'Tap Manage budget and set a monthly limit for the categories you want';
+
+  String get overLimit => isAr ? 'تجاوزت الحد' : 'Over limit';
+
+  String get save => isAr ? 'حفظ' : 'Save';
+
+  String get delete => isAr ? 'حذف' : 'Delete';
+
+  String get editLimit => isAr ? 'تعديل الحد' : 'Edit limit';
+
+  String get amountMustBeNumber =>
+      isAr ? 'ادخل رقماً صحيحاً' : 'Enter a valid number';
+
+  String get customCategoriesLabel => isAr ? 'تصنيفاتك' : 'Your categories';
+
+  String get builtInCategoriesLabel =>
+      isAr ? 'التصنيفات الأساسية' : 'Default categories';
+
+  String get incomeUsed =>
+      isAr ? 'من الدخل المستخدم' : 'of income used';
 }

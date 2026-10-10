@@ -18,6 +18,22 @@ class TxCategory {
   });
 
   String localName(String language) => language == 'ar' ? name : nameEn;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'nameEn': nameEn,
+        'icon': icon.codePoint,
+        'color': color.toARGB32(),
+      };
+
+  factory TxCategory.fromJson(Map<String, dynamic> json) => TxCategory(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        nameEn: (json['nameEn'] as String?) ?? (json['name'] as String),
+        icon: AppCategory.iconFor(json['icon'] as int),
+        color: Color(json['color'] as int),
+      );
 }
 
 class AppCategory {
@@ -41,12 +57,44 @@ class AppCategory {
     TxCategory(id: 'other', name: 'أخرى', nameEn: 'Other', icon: Icons.more_horiz, color: Color(0xFF8D8D8D)),
   ];
 
+  /// أيقونات متاحة لاختيارها للتصنيفات المخصّصة (ثابتة لإمكانية إعادة البناء).
+  static const List<IconData> paletteIcons = [
+    Icons.label_outline,
+    Icons.local_cafe_outlined,
+    Icons.pets_outlined,
+    Icons.fitness_center_outlined,
+    Icons.flight_takeoff_outlined,
+    Icons.savings_outlined,
+    Icons.phone_android_outlined,
+    Icons.sports_esports_outlined,
+  ];
+
+  /// إعادة بناء أيقونة من رمزها المخزّن.
+  static IconData iconFor(int codePoint) {
+    for (final icon in paletteIcons) {
+      if (icon.codePoint == codePoint) return icon;
+    }
+    return Icons.label_outline;
+  }
+
+  /// تصنيفات مصروفات مخصّصة أضافها المستخدم (تُحمَّل من التخزين).
+  static List<TxCategory> customExpense = [];
+
+  static List<TxCategory> get allExpense => [...expense, ...customExpense];
+
+  static List<TxCategory> byType(TxType type) =>
+      type == TxType.income ? income : allExpense;
+
   static TxCategory byId(String id, TxType type) {
-    final list = type == TxType.income ? income : expense;
+    final list = type == TxType.income ? income : allExpense;
     for (final c in list) {
       if (c.id == id) return c;
     }
-    return list.last;
+    if (type == TxType.income) return income.last;
+    for (final c in expense) {
+      if (c.id == 'other') return c;
+    }
+    return expense.last;
   }
 }
 

@@ -9,6 +9,7 @@ import '../widgets/pickers.dart';
 import '../widgets/pie_chart.dart';
 import '../widgets/tx_tile.dart';
 import 'add_transaction_screen.dart';
+import 'budget_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
 import 'transactions_screen.dart';
@@ -132,10 +133,6 @@ class DashboardPage extends StatelessWidget {
         final isDark = store.darkMode;
         final fmt = NumberFormat.currency(
             locale: s.currencyLocale(), symbol: s.currencySymbol());
-        final income = store.monthlyIncome;
-        final expense = store.monthlyExpense;
-        final remaining = store.monthlyBalance;
-        final ratio = income > 0 ? (expense / income).clamp(0.0, 1.0) : 0.0;
         final breakdown = store.monthExpenseBreakdown();
         final expenseTotal = breakdown.fold<double>(0, (a, e) => a + e.value);
         final recent = store.recent(5);
@@ -147,43 +144,12 @@ class DashboardPage extends StatelessWidget {
             children: [
               _Header(store: store, strings: s),
               const SizedBox(height: 20),
-              _BalanceCapsule(
-                title: s.remainingThisMonth,
-                amount: fmt.format(remaining),
-                ratio: ratio,
+              _BalancePanel(
+                store: store,
+                strings: s,
+                fmt: fmt,
                 isDark: isDark,
                 palette: p,
-                monthLabel: DateFormat('MMMM y', store.language)
-                    .format(store.selectedMonth),
-                onPickMonth: () => showMonthPicker(context, store),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _StatCard(
-                      label: s.income,
-                      amount: fmt.format(income),
-                      solid: const Color(0xFF2FBF71),
-                      pastel: const Color(0xFFDCF2E6),
-                      icon: Icons.arrow_downward_rounded,
-                      isDark: isDark,
-                      palette: p,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatCard(
-                      label: s.expenses,
-                      amount: fmt.format(expense),
-                      solid: const Color(0xFFE5544B),
-                      pastel: const Color(0xFFFBE0DE),
-                      icon: Icons.arrow_upward_rounded,
-                      isDark: isDark,
-                      palette: p,
-                    ),
-                  ),
-                ],
               ),
               const SizedBox(height: 16),
               Row(
@@ -213,28 +179,45 @@ class DashboardPage extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 26),
-              _SectionTitle(title: s.expenseBreakdown),
-              const SizedBox(height: 12),
-              _BreakdownCard(
-                entries: breakdown,
-                total: expenseTotal,
-                strings: s,
+              const SizedBox(height: 22),
+              _Panel(
                 palette: p,
+                children: [
+                  _SubHeader(title: s.expenseBreakdown),
+                  const SizedBox(height: 14),
+                  _BreakdownContent(
+                    entries: breakdown,
+                    total: expenseTotal,
+                    strings: s,
+                    palette: p,
+                  ),
+                  _PanelDivider(palette: p),
+                  _SubHeader(title: s.expenseDistribution),
+                  const SizedBox(height: 14),
+                  _PieContent(
+                    entries: breakdown,
+                    total: expenseTotal,
+                    strings: s,
+                    palette: p,
+                  ),
+                  _PanelDivider(palette: p),
+                  _SubHeader(
+                      title: s.recentTransactions,
+                      action: s.viewAll,
+                      onTap: onViewAll),
+                  const SizedBox(height: 2),
+                  _RecentContent(items: recent, strings: s, palette: p),
+                ],
               ),
-              const SizedBox(height: 26),
-              _SectionTitle(title: s.expenseDistribution),
+              const SizedBox(height: 24),
+              _SectionTitle(
+                  title: s.monthlyBudget,
+                  action: s.manageBudget,
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => BudgetScreen(store: store),
+                  ))),
               const SizedBox(height: 12),
-              _PieCard(
-                entries: breakdown,
-                total: expenseTotal,
-                strings: s,
-                palette: p,
-              ),
-              const SizedBox(height: 26),
-              _SectionTitle(title: s.recentTransactions, onTap: onViewAll, action: s.viewAll),
-              const SizedBox(height: 12),
-              _RecentCard(items: recent, strings: s, palette: p),
+              _BudgetSection(store: store, strings: s, palette: p),
             ],
           ),
         );
@@ -309,32 +292,33 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _BalanceCapsule extends StatelessWidget {
-  final String title;
-  final String amount;
-  final double ratio;
+class _BalancePanel extends StatelessWidget {
+  final MasrofyStore store;
+  final Strings strings;
+  final NumberFormat fmt;
   final bool isDark;
   final MasrofyPalette palette;
-  final String monthLabel;
-  final VoidCallback onPickMonth;
 
-  const _BalanceCapsule({
-    required this.title,
-    required this.amount,
-    required this.ratio,
+  const _BalancePanel({
+    required this.store,
+    required this.strings,
+    required this.fmt,
     required this.isDark,
     required this.palette,
-    required this.monthLabel,
-    required this.onPickMonth,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bg = isDark ? palette.bgElevated : const Color(0xFF0D221C);
-    final fg = isDark ? palette.textPrimary : Colors.white;
-    final sub = isDark ? palette.textSecondary : const Color(0xFFB9CCC4);
-    final barColor = isDark ? palette.accent : Colors.white;
-    final track = (isDark ? Colors.white : Colors.white).withValues(alpha: 0.18);
+    final p = palette;
+    final income = store.monthlyIncome;
+    final expense = store.monthlyExpense;
+    final remaining = store.monthlyBalance;
+    final ratio = income > 0 ? (expense / income).clamp(0.0, 1.0) : 0.0;
+
+    final bg = isDark ? p.bgElevated : const Color(0xFF0D221C);
+    final fg = isDark ? p.textPrimary : Colors.white;
+    final sub = isDark ? p.textSecondary : const Color(0xFFB9CCC4);
+    final barColor = isDark ? p.accent : Colors.white;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
@@ -342,7 +326,7 @@ class _BalanceCapsule extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(26),
         border: Border.all(
-          color: isDark ? palette.cardBorder : Colors.transparent,
+          color: isDark ? p.cardBorder : Colors.transparent,
         ),
         boxShadow: [
           BoxShadow(
@@ -358,14 +342,14 @@ class _BalanceCapsule extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(title,
+              Text(strings.remainingThisMonth,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: sub)),
               const Spacer(),
               InkWell(
-                onTap: onPickMonth,
+                onTap: () => showMonthPicker(context, store),
                 borderRadius: BorderRadius.circular(20),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -374,7 +358,9 @@ class _BalanceCapsule extends StatelessWidget {
                     children: [
                       Icon(Icons.calendar_month_outlined, size: 14, color: sub),
                       const SizedBox(width: 6),
-                      Text(monthLabel,
+                      Text(
+                          DateFormat('MMMM y', store.language)
+                              .format(store.selectedMonth),
                           style: TextStyle(fontSize: 12, color: sub)),
                     ],
                   ),
@@ -383,7 +369,7 @@ class _BalanceCapsule extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Text(amount,
+          Text(fmt.format(remaining),
               style: TextStyle(
                   fontSize: 32, fontWeight: FontWeight.w900, color: fg)),
           const SizedBox(height: 16),
@@ -392,7 +378,7 @@ class _BalanceCapsule extends StatelessWidget {
             child: LinearProgressIndicator(
               value: ratio,
               minHeight: 9,
-              backgroundColor: track,
+              backgroundColor: Colors.white.withValues(alpha: 0.18),
               valueColor: AlwaysStoppedAnimation<Color>(barColor),
             ),
           ),
@@ -405,9 +391,36 @@ class _BalanceCapsule extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       color: barColor)),
               const SizedBox(width: 6),
-              Text(
-                  isDark ? 'من الدخل المستخدم' : 'من الدخل المستخدم',
+              Text(strings.incomeUsed,
                   style: TextStyle(fontSize: 11, color: sub)),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: _StatCard(
+                  label: strings.income,
+                  amount: fmt.format(income),
+                  solid: const Color(0xFF2FBF71),
+                  pastel: const Color(0xFFDCF2E6),
+                  icon: Icons.arrow_downward_rounded,
+                  isDark: isDark,
+                  palette: p,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _StatCard(
+                  label: strings.expenses,
+                  amount: fmt.format(expense),
+                  solid: const Color(0xFFE5544B),
+                  pastel: const Color(0xFFFBE0DE),
+                  icon: Icons.arrow_upward_rounded,
+                  isDark: isDark,
+                  palette: p,
+                ),
+              ),
             ],
           ),
         ],
@@ -561,13 +574,224 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _BreakdownCard extends StatelessWidget {
+class _Panel extends StatelessWidget {
+  final MasrofyPalette palette;
+  final List<Widget> children;
+
+  const _Panel({required this.palette, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+      decoration: BoxDecoration(
+        color: palette.card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: palette.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+}
+
+class _PanelDivider extends StatelessWidget {
+  final MasrofyPalette palette;
+
+  const _PanelDivider({required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      child: Divider(height: 1, thickness: 0.7, color: palette.cardBorder),
+    );
+  }
+}
+
+class _SubHeader extends StatelessWidget {
+  final String title;
+  final String? action;
+  final VoidCallback? onTap;
+
+  const _SubHeader({required this.title, this.action, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Row(
+      children: [
+        Text(title,
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: p.textPrimary)),
+        const Spacer(),
+        if (onTap != null)
+          GestureDetector(
+            onTap: onTap,
+            child: Text(action ?? '',
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: p.accent)),
+          ),
+      ],
+    );
+  }
+}
+
+class _BudgetSection extends StatelessWidget {
+  final MasrofyStore store;
+  final Strings strings;
+  final MasrofyPalette palette;
+
+  const _BudgetSection({
+    required this.store,
+    required this.strings,
+    required this.palette,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette;
+    final rows = <TxCategory>[];
+    for (final c in store.expenseCategories) {
+      if (store.budgetFor(c.id) > 0 || store.spentFor(c.id) > 0) rows.add(c);
+    }
+
+    if (rows.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+        decoration: BoxDecoration(
+          color: p.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: p.cardBorder),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.savings_outlined,
+                size: 34, color: p.textMuted.withValues(alpha: 0.7)),
+            const SizedBox(height: 10),
+            Text(strings.budgetEmpty,
+                style: TextStyle(
+                    fontWeight: FontWeight.w800, color: p.textPrimary)),
+            const SizedBox(height: 4),
+            Text(strings.budgetEmptyHint,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: p.textMuted)),
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => BudgetScreen(store: store),
+              )),
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: Text(strings.manageBudget),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _Panel(
+      palette: p,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          _BudgetSectionRow(
+            cat: rows[i],
+            limit: store.budgetFor(rows[i].id),
+            spent: store.spentFor(rows[i].id),
+            strings: strings,
+            palette: p,
+          ),
+          if (i != rows.length - 1) const SizedBox(height: 16),
+        ],
+      ],
+    );
+  }
+}
+
+class _BudgetSectionRow extends StatelessWidget {
+  final TxCategory cat;
+  final double limit;
+  final double spent;
+  final Strings strings;
+  final MasrofyPalette palette;
+
+  const _BudgetSectionRow({
+    required this.cat,
+    required this.limit,
+    required this.spent,
+    required this.strings,
+    required this.palette,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette;
+    final fmt = NumberFormat.decimalPattern(strings.dateLocale());
+    final hasLimit = limit > 0;
+    final over = hasLimit && spent > limit;
+    final ratio = hasLimit ? (spent / limit).clamp(0.0, 1.0) : 0.0;
+    final barColor = over ? p.expense : cat.color;
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: cat.color.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Icon(cat.icon, size: 17, color: cat.color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(cat.localName(strings.language),
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: p.textPrimary)),
+            ),
+            Text(
+              hasLimit
+                  ? '${fmt.format(spent)} / ${fmt.format(limit)}'
+                  : strings.noLimit,
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: over ? FontWeight.w700 : FontWeight.w500,
+                  color: over ? p.expense : p.textMuted),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: ratio,
+            minHeight: 7,
+            backgroundColor: p.cardBorder,
+            valueColor: AlwaysStoppedAnimation<Color>(barColor),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BreakdownContent extends StatelessWidget {
   final List<MapEntry<String, double>> entries;
   final double total;
   final Strings strings;
   final MasrofyPalette palette;
 
-  const _BreakdownCard({
+  const _BreakdownContent({
     required this.entries,
     required this.total,
     required this.strings,
@@ -578,29 +802,21 @@ class _BreakdownCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = palette;
     if (entries.isEmpty) {
-      return _EmptyCard(text: strings.noData, palette: p);
+      return _EmptyBlock(text: strings.noData, palette: p);
     }
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      decoration: BoxDecoration(
-        color: p.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: p.cardBorder),
-      ),
-      child: Column(
-        children: [
-          for (final e in entries) ...[
-            _BreakdownRow(
-              categoryId: e.key,
-              amount: e.value,
-              fraction: total > 0 ? e.value / total : 0,
-              strings: strings,
-              palette: p,
-            ),
-            const SizedBox(height: 14),
-          ],
+    return Column(
+      children: [
+        for (var i = 0; i < entries.length; i++) ...[
+          _BreakdownRow(
+            categoryId: entries[i].key,
+            amount: entries[i].value,
+            fraction: total > 0 ? entries[i].value / total : 0,
+            strings: strings,
+            palette: p,
+          ),
+          if (i != entries.length - 1) const SizedBox(height: 14),
         ],
-      ),
+      ],
     );
   }
 }
@@ -671,13 +887,13 @@ class _BreakdownRow extends StatelessWidget {
   }
 }
 
-class _PieCard extends StatelessWidget {
+class _PieContent extends StatelessWidget {
   final List<MapEntry<String, double>> entries;
   final double total;
   final Strings strings;
   final MasrofyPalette palette;
 
-  const _PieCard({
+  const _PieContent({
     required this.entries,
     required this.total,
     required this.strings,
@@ -695,52 +911,44 @@ class _PieCard extends StatelessWidget {
           color: AppCategory.byId(e.key, TxType.expense).color,
         ),
     ];
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: p.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: p.cardBorder),
-      ),
-      child: Column(
-        children: [
-          PieChart(
-            slices: slices,
-            emptyColor: p.cardBorder,
-            size: 170,
-            thickness: 24,
-            center: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(strings.totalLabel,
-                    style: TextStyle(fontSize: 11, color: p.textMuted)),
-                const SizedBox(height: 2),
-                Text(fmt.format(total),
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: p.textPrimary)),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 12,
-            runSpacing: 10,
-            alignment: WrapAlignment.center,
+    return Column(
+      children: [
+        PieChart(
+          slices: slices,
+          emptyColor: p.cardBorder,
+          size: 170,
+          thickness: 24,
+          center: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              for (final e in entries)
-                _LegendDot(
-                  color: AppCategory.byId(e.key, TxType.expense).color,
-                  label: AppCategory.byId(e.key, TxType.expense)
-                      .localName(strings.language),
-                  value: total > 0 ? e.value / total : 0,
-                  palette: p,
-                ),
+              Text(strings.totalLabel,
+                  style: TextStyle(fontSize: 11, color: p.textMuted)),
+              const SizedBox(height: 2),
+              Text(fmt.format(total),
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: p.textPrimary)),
             ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 18),
+        Wrap(
+          spacing: 12,
+          runSpacing: 10,
+          alignment: WrapAlignment.center,
+          children: [
+            for (final e in entries)
+              _LegendDot(
+                color: AppCategory.byId(e.key, TxType.expense).color,
+                label: AppCategory.byId(e.key, TxType.expense)
+                    .localName(strings.language),
+                value: total > 0 ? e.value / total : 0,
+                palette: p,
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -776,12 +984,12 @@ class _LegendDot extends StatelessWidget {
   }
 }
 
-class _RecentCard extends StatelessWidget {
+class _RecentContent extends StatelessWidget {
   final List<Transaction> items;
   final Strings strings;
   final MasrofyPalette palette;
 
-  const _RecentCard({
+  const _RecentContent({
     required this.items,
     required this.strings,
     required this.palette,
@@ -791,48 +999,35 @@ class _RecentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = palette;
     if (items.isEmpty) {
-      return _EmptyCard(text: strings.noTransactions, palette: p);
+      return _EmptyBlock(text: strings.noTransactions, palette: p);
     }
-    return Container(
-      decoration: BoxDecoration(
-        color: p.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: p.cardBorder),
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < items.length; i++) ...[
-            TxTile(tx: items[i], strings: strings, showCheck: true),
-            if (i != items.length - 1)
-              Divider(
-                  height: 1,
-                  thickness: 0.6,
-                  indent: 68,
-                  endIndent: 16,
-                  color: p.cardBorder),
-          ],
+    return Column(
+      children: [
+        for (var i = 0; i < items.length; i++) ...[
+          TxTile(tx: items[i], strings: strings, showCheck: true),
+          if (i != items.length - 1)
+            Divider(
+                height: 1,
+                thickness: 0.6,
+                indent: 68,
+                endIndent: 4,
+                color: p.cardBorder),
         ],
-      ),
+      ],
     );
   }
 }
 
-class _EmptyCard extends StatelessWidget {
+class _EmptyBlock extends StatelessWidget {
   final String text;
   final MasrofyPalette palette;
 
-  const _EmptyCard({required this.text, required this.palette});
+  const _EmptyBlock({required this.text, required this.palette});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 28),
-      decoration: BoxDecoration(
-        color: palette.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: palette.cardBorder),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 22),
       child: Column(
         children: [
           Icon(Icons.inbox_outlined,
