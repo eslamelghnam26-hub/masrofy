@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/strings.dart';
 import '../store/masrofy_store.dart';
 import '../theme/app_theme.dart';
-import 'home_screen.dart';
+import 'root_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   final MasrofyStore store;
@@ -12,10 +12,11 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
+    // شاشة الترحيب بخلفية رصاصي فاتح دائماً مهما كان الثيم الحالي.
+    const p = MasrofyPalette.light;
     final s = Strings(store.language);
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: LightColors.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -79,7 +80,7 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).pushReplacement(
                       PageRouteBuilder(
-                        pageBuilder: (_, _, _) => HomeScreen(store: store),
+                        pageBuilder: (_, _, _) => RootScreen(store: store),
                         transitionsBuilder: (_, animation, _, child) =>
                             FadeTransition(opacity: animation, child: child),
                       ),
@@ -108,7 +109,7 @@ class _TagPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
+    const p = MasrofyPalette.light;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(

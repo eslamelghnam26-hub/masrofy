@@ -28,20 +28,37 @@ class MasrofyPalette {
     required this.expense,
   });
 
+  /// Theme 1 — Premium Dark-Green (deep forest).
   static const dark = MasrofyPalette(
-    bg: Color(0xFF121212),
-    bgElevated: Color(0xFF1A1A1E),
-    card: Color(0xFF1E1E24),
-    cardBorder: Color(0xFF2A2A32),
-    textPrimary: Color(0xFFF2F2F4),
-    textSecondary: Color(0xFF9A9AA5),
-    textMuted: Color(0xFF6E6E79),
-    accent: Color(0xFF7C5CFC),
-    accentSoft: Color(0xFF2A2350),
-    income: Color(0xFF3DBE7E),
-    expense: Color(0xFFEB5B5B),
+    bg: Color(0xFF0D221C),
+    bgElevated: Color(0xFF16322A),
+    card: Color(0xFF13291F),
+    cardBorder: Color(0xFF20463A),
+    textPrimary: Color(0xFFE9F3EE),
+    textSecondary: Color(0xFF93AEA2),
+    textMuted: Color(0xFF628073),
+    accent: Color(0xFF3FBF7B),
+    accentSoft: Color(0xFF17352A),
+    income: Color(0xFF34C77B),
+    expense: Color(0xFFE5544B),
   );
 
+  /// Theme 2 — Modern Light-Cream.
+  static const cream = MasrofyPalette(
+    bg: Color(0xFFF4F3EF),
+    bgElevated: Color(0xFFFFFFFF),
+    card: Color(0xFFFFFFFF),
+    cardBorder: Color(0xFFE7E4DA),
+    textPrimary: Color(0xFF1C2A24),
+    textSecondary: Color(0xFF5B6A63),
+    textMuted: Color(0xFF8B968F),
+    accent: Color(0xFF0D221C),
+    accentSoft: Color(0xFFE7F3EC),
+    income: Color(0xFF2FBF71),
+    expense: Color(0xFFE5544B),
+  );
+
+  /// تدرّج فاتح رمادي مستخدم في شاشات الدخول/التحقق/الترحيب.
   static const light = MasrofyPalette(
     bg: Color(0xFFF5F5F8),
     bgElevated: Color(0xFFFFFFFF),
@@ -60,23 +77,10 @@ class MasrofyPalette {
 extension MasrofyPaletteX on BuildContext {
   MasrofyPalette get palette => Theme.of(this).brightness == Brightness.dark
       ? MasrofyPalette.dark
-      : MasrofyPalette.light;
+      : MasrofyPalette.cream;
 }
 
-class AppColors {
-  static const bg = Color(0xFF121212);
-  static const bgElevated = Color(0xFF1A1A1E);
-  static const card = Color(0xFF1E1E24);
-  static const cardBorder = Color(0xFF2A2A32);
-  static const textPrimary = Color(0xFFF2F2F4);
-  static const textSecondary = Color(0xFF9A9AA5);
-  static const textMuted = Color(0xFF6E6E79);
-  static const accent = Color(0xFF7C5CFC);
-  static const accentSoft = Color(0xFF2A2350);
-  static const income = Color(0xFF3DBE7E);
-  static const expense = Color(0xFFEB5B5B);
-}
-
+/// تدرّج الرمادي الفاتح لشاشات الترحيب (تبقى كما هي).
 class LightColors {
   static const bg = Color(0xFFF5F5F8);
   static const bgElevated = Color(0xFFFFFFFF);
@@ -93,81 +97,71 @@ class LightColors {
 
 ThemeData _base({
   required Brightness brightness,
-  required Color bg,
-  required Color bgElevated,
-  required Color card,
-  required Color cardBorder,
-  required Color textPrimary,
-  required Color textSecondary,
-  required Color textMuted,
-  required Color accent,
-  required Color accentSoft,
-  required Color income,
-  required Color expense,
+  required MasrofyPalette p,
   required List<BoxShadow> buttonShadow,
 }) {
   final base = ThemeData(
     useMaterial3: true,
     brightness: brightness,
-    scaffoldBackgroundColor: bg,
+    scaffoldBackgroundColor: p.bg,
     colorScheme: ColorScheme(
       brightness: brightness,
-      primary: accent,
-      secondary: accent,
-      surface: card,
+      primary: p.accent,
+      secondary: p.accent,
+      surface: p.card,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onSurface: textPrimary,
+      onSurface: p.textPrimary,
       onError: Colors.white,
-      error: expense,
+      error: p.expense,
     ),
   );
 
   return base.copyWith(
     textTheme: GoogleFonts.cairoTextTheme(base.textTheme),
     appBarTheme: AppBarTheme(
-      backgroundColor: bg,
-      foregroundColor: textPrimary,
+      backgroundColor: p.bg,
+      foregroundColor: p.textPrimary,
       elevation: 0,
       centerTitle: true,
       titleTextStyle: GoogleFonts.cairo(
-        color: textPrimary,
+        color: p.textPrimary,
         fontSize: 18,
         fontWeight: FontWeight.w700,
       ),
     ),
     cardTheme: CardThemeData(
-      color: card,
+      color: p.card,
       elevation: 0,
       shadowColor: Colors.black.withValues(alpha: 0.4),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: cardBorder),
+        side: BorderSide(color: p.cardBorder),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: bgElevated,
-      hintStyle: TextStyle(color: textMuted),
-      labelStyle: TextStyle(color: textSecondary),
-      prefixIconColor: textMuted,
+      fillColor: p.bgElevated,
+      hintStyle: TextStyle(color: p.textMuted),
+      labelStyle: TextStyle(color: p.textSecondary),
+      prefixIconColor: p.textMuted,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: cardBorder),
+        borderSide: BorderSide(color: p.cardBorder),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: cardBorder),
+        borderSide: BorderSide(color: p.cardBorder),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: accent, width: 1.4),
+        borderSide: BorderSide(color: p.accent, width: 1.4),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: accent,
+        backgroundColor: p.accent,
         foregroundColor: Colors.white,
         minimumSize: const Size.fromHeight(54),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -176,34 +170,24 @@ ThemeData _base({
       ),
     ),
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: bgElevated,
-      contentTextStyle: TextStyle(color: textPrimary),
+      backgroundColor: brightness == Brightness.dark ? p.bgElevated : const Color(0xFF1C2A24),
+      contentTextStyle: const TextStyle(color: Colors.white),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       behavior: SnackBarBehavior.floating,
     ),
     brightness: brightness,
-    primaryColor: accent,
+    primaryColor: p.accent,
     shadowColor: Colors.black.withValues(alpha: brightness == Brightness.dark ? 0.6 : 0.2),
-    dividerColor: cardBorder,
+    dividerColor: p.cardBorder,
   );
 }
 
 ThemeData buildDarkTheme() {
   return _base(
     brightness: Brightness.dark,
-    bg: AppColors.bg,
-    bgElevated: AppColors.bgElevated,
-    card: AppColors.card,
-    cardBorder: AppColors.cardBorder,
-    textPrimary: AppColors.textPrimary,
-    textSecondary: AppColors.textSecondary,
-    textMuted: AppColors.textMuted,
-    accent: AppColors.accent,
-    accentSoft: AppColors.accentSoft,
-    income: AppColors.income,
-    expense: AppColors.expense,
+    p: MasrofyPalette.dark,
     buttonShadow: const [
-      BoxShadow(color: Color(0x4D7C5CFC), blurRadius: 24, offset: Offset(0, 8)),
+      BoxShadow(color: Color(0x4D3FBF7B), blurRadius: 24, offset: Offset(0, 8)),
     ],
   );
 }
@@ -211,19 +195,9 @@ ThemeData buildDarkTheme() {
 ThemeData buildLightTheme() {
   return _base(
     brightness: Brightness.light,
-    bg: LightColors.bg,
-    bgElevated: LightColors.bgElevated,
-    card: LightColors.card,
-    cardBorder: LightColors.cardBorder,
-    textPrimary: LightColors.textPrimary,
-    textSecondary: LightColors.textSecondary,
-    textMuted: LightColors.textMuted,
-    accent: LightColors.accent,
-    accentSoft: LightColors.accentSoft,
-    income: LightColors.income,
-    expense: LightColors.expense,
+    p: MasrofyPalette.cream,
     buttonShadow: const [
-      BoxShadow(color: Color(0x307C5CFC), blurRadius: 20, offset: Offset(0, 6)),
+      BoxShadow(color: Color(0x331C2A24), blurRadius: 20, offset: Offset(0, 6)),
     ],
   );
 }

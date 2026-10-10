@@ -106,11 +106,12 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
+    // شاشة كود التفعيل بخلفية رصاصي فاتح دائماً مهما كان الثيم الحالي.
+    const p = MasrofyPalette.light;
     final s = Strings(widget.store.language);
     final boxWidth = (MediaQuery.of(context).size.width - 52 - 10 * (_digitCount - 1)) / _digitCount;
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: LightColors.bg,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -150,7 +151,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '+20 ${widget.phone}',
+                  widget.phone,
                   style: TextStyle(fontSize: 13, color: p.accent),
                 ),
               ),

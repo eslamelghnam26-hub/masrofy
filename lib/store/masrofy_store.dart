@@ -85,14 +85,32 @@ class MasrofyStore extends ChangeNotifier {
     return list;
   }
 
-  List<Transaction> monthTransactions() {
-    final list = _transactions
+  List<Transaction> monthTransactions() {    final list = _transactions
         .where((t) =>
             t.date.year == _selectedMonth.year && t.date.month == _selectedMonth.month)
         .toList();
     list.sort((a, b) => b.date.compareTo(a.date));
     return list;
   }
+
+  /// مصروفات الشهر المحدد موزّعة حسب الفئة (تنازلياً حسب المبلغ).
+  List<MapEntry<String, double>> monthExpenseBreakdown() {
+    final map = <String, double>{};
+    for (final t in _transactions) {
+      if (t.type != TxType.expense) continue;
+      if (t.date.year != _selectedMonth.year ||
+          t.date.month != _selectedMonth.month) {
+        continue;
+      }
+      map[t.categoryId] = (map[t.categoryId] ?? 0) + t.amount;
+    }
+    final list = map.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return list;
+  }
+
+  /// آخر [count] عملية (الأحدث أولاً).
+  List<Transaction> recent(int count) => sorted().take(count).toList();
 
   Future<void> setMonth(DateTime month) async {
     _selectedMonth = DateTime(month.year, month.month, 1);

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/root_screen.dart';
 import 'services/auth_service.dart';
 import 'store/masrofy_store.dart';
 import 'theme/app_theme.dart';
@@ -50,7 +50,7 @@ class MasrofyApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           home: store.loggedIn
-              ? HomeScreen(store: store)
+              ? RootScreen(store: store)
               : LoginScreen(store: store),
         );
       },

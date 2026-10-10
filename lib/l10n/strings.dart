@@ -88,6 +88,10 @@ class Strings {
   String get phoneInvalid =>
       isAr ? 'رقم الموبايل غير صحيح' : 'Invalid phone number';
 
+  String get selectCountry => isAr ? 'اختر الدولة' : 'Select country';
+
+  String get searchCountry => isAr ? 'ابحث عن دولة' : 'Search country';
+
   String get otpTitle => isAr ? 'كود التفعيل' : 'Verification code';
 
   String get otpSubtitle =>
@@ -114,4 +118,50 @@ class Strings {
 
   String get welcomeStory =>
       isAr ? 'تتبع كل جنيه فين راح وجاء' : 'Track every pound in and out';
+
+  String get appSubtitle =>
+      isAr ? 'إدارة أموالك.. لحياة أفضل' : 'Manage your money for a better life';
+
+  String get navHome => isAr ? 'الرئيسية' : 'Home';
+
+  String get navTransactions => isAr ? 'المعاملات' : 'Transactions';
+
+  String get navReports => isAr ? 'التقارير' : 'Reports';
+
+  String get navSettings => isAr ? 'الإعدادات' : 'Settings';
+
+  String get remainingBalance => isAr ? 'الرصيد المتبقي' : 'Remaining balance';
+
+  String get remainingThisMonth =>
+      isAr ? 'المتبقي من هذا الشهر' : 'Remaining this month';
+
+  String get expenseBreakdown =>
+      isAr ? 'تصنيفات المصروفات' : 'Expense breakdown';
+
+  String get expenseDistribution =>
+      isAr ? 'توزيع المصروفات' : 'Expense distribution';
+
+  String get recentTransactions =>
+      isAr ? 'أحدث العمليات' : 'Recent transactions';
+
+  String get reportsTitle => isAr ? 'التقارير' : 'Reports';
+
+  String get settingsTitle => isAr ? 'الإعدادات' : 'Settings';
+
+  String get themeLabel => isAr ? 'المظهر' : 'Theme';
+
+  String get themeGreen => isAr ? 'أخضر داكن' : 'Dark green';
+
+  String get themeCream => isAr ? 'كريمي فاتح' : 'Light cream';
+
+  String get logout => isAr ? 'تسجيل الخروج' : 'Log out';
+
+  String get noData => isAr ? 'لا توجد بيانات بعد' : 'No data yet';
+
+  String get totalLabel => isAr ? 'الإجمالي' : 'Total';
+
+  String get viewAll => isAr ? 'عرض الكل' : 'View all';
+
+  String get monthTransactionsTitle =>
+      isAr ? 'معاملات الشهر' : 'Transactions this month';
 }
