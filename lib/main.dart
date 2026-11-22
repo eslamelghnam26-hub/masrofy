@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'screens/login_screen.dart';
 import 'screens/root_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/auth_service.dart';
 import 'store/masrofy_store.dart';
 import 'theme/app_theme.dart';
@@ -16,8 +17,12 @@ void main() async {
   final store = MasrofyStore();
   await store.load();
 
-  // جلسة Firebase موجودة؟ دخّل المستخدم تلقائياً.
-  if (!store.loggedIn && await AuthService.instance.hasActiveSession()) {
+  // جلسة Firebase موجودة؟ دخّل المستخدم تلقائياً واربط بياناته السحابية.
+  if (await AuthService.instance.hasActiveSession()) {
+    final uid = AuthService.instance.currentUid;
+    if (uid != null) {
+      await store.attachUser(uid);
+    }
     await store.setLoggedIn(true);
   }
 
@@ -38,7 +43,11 @@ class MasrofyApp extends StatelessWidget {
         return MaterialApp(
           title: 'مصروفي',
           debugShowCheckedModeBanner: false,
-          theme: store.darkMode ? buildDarkTheme() : buildLightTheme(),
+          theme: switch (store.themeName) {
+            'dark' => buildDarkTheme(),
+            'cream' => buildCreamTheme(),
+            _ => buildLightTheme(),
+          },
           locale: locale,
           supportedLocales: const [
             Locale('ar', ''),
@@ -49,9 +58,11 @@ class MasrofyApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          home: store.loggedIn
-              ? RootScreen(store: store)
-              : LoginScreen(store: store),
+          home: SplashScreen(
+            next: store.loggedIn
+                ? RootScreen(store: store)
+                : LoginScreen(store: store),
+          ),
         );
       },
     );

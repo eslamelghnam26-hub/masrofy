@@ -6,7 +6,9 @@ import '../l10n/strings.dart';
 import '../services/auth_service.dart';
 import '../store/masrofy_store.dart';
 import '../theme/app_theme.dart';
+import '../widgets/premium_background.dart';
 import 'otp_screen.dart';
+import 'welcome_screen.dart';
 
 class _Country {
   final String flag;
@@ -72,12 +74,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  static const _accent = Color(0xFF7C5CFC);
-  static const _border = Color(0xFFE3E3EC);
-  static const _textPrimary = Color(0xFF17171C);
+  static const _accent = LightColors.accent;
+  static const _textPrimary = LightColors.textPrimary;
+  static const _hint = LightColors.textMuted;
 
   final _phoneController = TextEditingController();
   final _phoneFocus = FocusNode();
+  final _passwordController = TextEditingController();
+  final _passwordFocus = FocusNode();
+  bool _obscurePassword = true;
   bool _submitting = false;
   bool _showDemoNotice = false;
   _Country _country = _countries.first;
@@ -86,6 +91,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _phoneController.dispose();
     _phoneFocus.dispose();
+    _passwordController.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -113,6 +120,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _forgotPassword() {
+    final s = Strings(widget.store.language);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(s.forgotPasswordHint)));
+  }
+
   Future<void> _continue() async {
     final s = Strings(widget.store.language);
     final digits =
@@ -125,6 +138,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(s.phoneInvalid)));
+      }
+      return;
+    }
+    final password = _passwordController.text.trim();
+    if (password.isNotEmpty && password.length < 4) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(s.passwordInvalid)));
       }
       return;
     }
@@ -147,13 +168,55 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _showDemoNotice = true);
     }
 
+    if (result.isAuto && result.user != null) {
+      await widget.store.attachUser(result.user!.uid);
+      await widget.store.setLoggedIn(true);
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (_, _, _) => WelcomeScreen(store: widget.store),
+          transitionsBuilder: (_, animation, _, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
+      );
+      return;
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => OtpScreen(
           store: widget.store,
           phone: '${_country.dialCode} $digits',
+          phoneNumber: '${_country.dialCode}$digits',
           verificationId: result.verificationId,
         ),
+      ),
+    );
+  }
+
+  Future<void> _signInWithGoogle() async {
+    final s = Strings(widget.store.language);
+    setState(() => _submitting = true);
+    FocusScope.of(context).unfocus();
+
+    final user = await AuthService.instance.signInWithGoogle();
+    if (!mounted) return;
+    setState(() => _submitting = false);
+
+    if (user == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.googleSignInFailed)));
+      return;
+    }
+
+    await widget.store.attachUser(user.uid);
+    await widget.store.setLoggedIn(true);
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, _, _) => WelcomeScreen(store: widget.store),
+        transitionsBuilder: (_, animation, _, child) =>
+            FadeTransition(opacity: animation, child: child),
       ),
     );
   }
@@ -161,99 +224,78 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final s = Strings(widget.store.language);
-    // شاشة الدخول دائماً بخلفية بيضاء صلبة مهما كان الثيم الحالي.
+    // شاشة الدخول بخلفية رصاصي فاتح دائماً مهما كان الثيم الحالي.
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 32),
+      backgroundColor: const Color(0xFFEAEAEA),
+      body: PremiumBackground(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Hero(
                   tag: 'app_logo',
-                  child: Container(
-                    width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _accent.withValues(alpha: 0.35),
-                          blurRadius: 30,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: Image.asset(
-                        'assets/icon/app_icon.png',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                  child: Image.asset(
+                    'assets/icon/app_icon_clear.png',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
                   ),
                 ),
                 const SizedBox(height: 22),
                 Text(
                   s.appName,
                   style: const TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
                     color: _textPrimary,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  s.loginTitle,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 14, color: Color(0xFF55555E)),
-                ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 30),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: _border),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
                       InkWell(
                         onTap: _submitting ? null : _pickCountry,
                         borderRadius: const BorderRadius.horizontal(
-                          right: Radius.circular(18),
+                          right: Radius.circular(12),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 18),
+                              horizontal: 14, vertical: 15),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(_country.flag,
-                                  style: const TextStyle(fontSize: 18)),
+                                  style: const TextStyle(fontSize: 17)),
                               const SizedBox(width: 6),
                               Text(
                                 _country.dialCode,
                                 style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
                                   color: _textPrimary,
                                 ),
                               ),
                               const Icon(Icons.arrow_drop_down,
-                                  size: 20, color: Color(0xFF8A8A94)),
+                                  size: 18, color: _hint),
                             ],
                           ),
                         ),
                       ),
                       Container(
-                        margin:
-                            const EdgeInsets.symmetric(horizontal: 2, vertical: 14),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 2, vertical: 12),
                         width: 1,
-                        height: 26,
-                        color: _border,
+                        height: 24,
+                        color: const Color(0xFFE2E2E2),
                       ),
                       Expanded(
                         child: TextField(
@@ -261,23 +303,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           focusNode: _phoneFocus,
                           keyboardType: TextInputType.phone,
                           maxLength: 15,
-                          textInputAction: TextInputAction.done,
+                          textInputAction: TextInputAction.next,
                           onSubmitted: (_) => _continue(),
                           inputFormatters: [
                             DigitInputFormatter(),
                             LengthLimitingTextInputFormatter(15),
                           ],
                           style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
                               color: _textPrimary),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             counterText: '',
                             filled: false,
-                            hintText: '010 0000 0000',
+                            hintText: s.phoneHint,
                             hintStyle: TextStyle(
-                                fontSize: 15, color: Color(0xFF8A8A94)),
+                                fontSize: 14, color: _hint),
                             border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
                             isCollapsed: true,
                           ),
@@ -285,6 +330,50 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(width: 14),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _passwordController,
+                  focusNode: _passwordFocus,
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _continue(),
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: _textPrimary),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintText: s.passwordHint,
+                    hintStyle: TextStyle(fontSize: 14, color: _hint),
+                    suffixIcon: IconButton(
+                      onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        size: 20,
+                        color: _hint,
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _accent, width: 1.4),
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    isCollapsed: true,
                   ),
                 ),
                 if (_showDemoNotice) ...[
@@ -304,34 +393,100 @@ class _LoginScreenState extends State<LoginScreen> {
                         Expanded(
                           child: Text(
                             s.demoModeNotice,
-                            style: const TextStyle(fontSize: 12, color: _accent),
+                            style:
+                                const TextStyle(fontSize: 12, color: _accent),
                           ),
                         ),
                       ],
                     ),
                   ),
                 ],
-                const SizedBox(height: 24),
+                const SizedBox(height: 22),
                 SizedBox(
                   width: double.infinity,
-                  height: 56,
+                  height: 50,
                   child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _accent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                     onPressed: _submitting ? null : _continue,
                     child: _submitting
                         ? const SizedBox(
-                            width: 24,
-                            height: 24,
+                            width: 22,
+                            height: 22,
                             child: CircularProgressIndicator(
                                 strokeWidth: 2.5, color: Colors.white),
                           )
-                        : Text(s.continueLabel,
+                        : Text(
+                            s.loginTitle,
                             style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w800)),
+                                fontSize: 16, fontWeight: FontWeight.w700),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                        child: Divider(color: Colors.grey.shade300, height: 1)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(s.orLabel,
+                          style:
+                              const TextStyle(fontSize: 12, color: _hint)),
+                    ),
+                    Expanded(
+                        child: Divider(color: Colors.grey.shade300, height: 1)),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    onPressed: _submitting ? null : _signInWithGoogle,
+                    icon: const Icon(Icons.g_mobiledata,
+                        size: 28, color: Color(0xFF4285F4)),
+                    label: Text(
+                      s.signInWithGoogle,
+                      style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _textPrimary),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                InkWell(
+                  onTap: _forgotPassword,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    child: Text(
+                      s.forgotPassword,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
         ),
       ),
     );
@@ -358,7 +513,7 @@ class _CountryPickerSheet extends StatefulWidget {
 }
 
 class _CountryPickerSheetState extends State<_CountryPickerSheet> {
-  static const _accent = Color(0xFF7C5CFC);
+  static const _accent = Color(0xFF3B5A4F);
   static const _border = Color(0xFFE3E3EC);
   static const _textPrimary = Color(0xFF17171C);
 

@@ -6,17 +6,20 @@ import '../l10n/strings.dart';
 import '../services/auth_service.dart';
 import '../store/masrofy_store.dart';
 import '../theme/app_theme.dart';
+import '../widgets/premium_background.dart';
 import 'welcome_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final MasrofyStore store;
   final String phone;
+  final String phoneNumber;
   final String verificationId;
 
   const OtpScreen({
     super.key,
     required this.store,
     required this.phone,
+    this.phoneNumber = '',
     this.verificationId = '',
   });
 
@@ -25,6 +28,9 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
+  static const _accent = LightColors.accent;
+  static const _textPrimary = LightColors.textPrimary;
+
   late final int _digitCount;
   late final List<TextEditingController> _controllers;
   late final List<FocusNode> _focuses;
@@ -38,7 +44,7 @@ class _OtpScreenState extends State<OtpScreen> {
     _digitCount = _isReal ? 6 : 4;
     _controllers = List.generate(_digitCount, (_) => TextEditingController());
     _focuses = List.generate(_digitCount, (_) => FocusNode());
-    // تركيز تلقائي على أول خانة (يسار) لبدء الإدخال فوراً.
+    // تركيز تلقائي على أول خانة لبدء الإدخال فوراً.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _focuses.isNotEmpty) {
         _focuses.first.requestFocus();
@@ -68,9 +74,23 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   /// يجمع الأرقام كما تظهر بصرياً (يسار -> يمين) بغض النظر عن اتجاه الواجهة،
-/// ويحوّل الأرقام العربية إلى ASCII قبل المقارنة.
+  /// ويحوّل الأرقام العربية إلى ASCII قبل المقارنة.
   String get _entered =>
       normalizeDigits(_controllers.map((c) => c.text).join());
+
+  Future<void> _resend() async {
+    final s = Strings(widget.store.language);
+    if (!_isReal) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.otpHint)));
+      return;
+    }
+    if (widget.phoneNumber.isEmpty) return;
+    final result = await AuthService.instance.sendCode(widget.phoneNumber);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(result.isFailed ? s.otpSendFailed : s.otpResent)));
+  }
 
   Future<void> _verify() async {
     final s = Strings(widget.store.language);
@@ -88,6 +108,10 @@ class _OtpScreenState extends State<OtpScreen> {
     await delayed;
     if (!mounted) return;
     if (ok) {
+      final uid = AuthService.instance.currentUid;
+      if (uid != null) {
+        await widget.store.attachUser(uid);
+      }
       await widget.store.setLoggedIn(true);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -106,10 +130,11 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // شاشة كود التفعيل بخلفية رصاصي فاتح دائماً مهما كان الثيم الحالي.
-    const p = MasrofyPalette.light;
     final s = Strings(widget.store.language);
-    final boxWidth = (MediaQuery.of(context).size.width - 52 - 10 * (_digitCount - 1)) / _digitCount;
+    final subtitle = _isReal ? s.otpSubtitle6 : s.otpSubtitle4;
+    final boxSize = 52.0;
+    final gap = 14.0;
+    // شاشة كود التفعيل بخلفية رصاصي فاتح دائماً مهما كان الثيم الحالي.
     return Scaffold(
       backgroundColor: LightColors.bg,
       resizeToAvoidBottomInset: true,
@@ -117,81 +142,73 @@ class _OtpScreenState extends State<OtpScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: p.textPrimary),
+          icon: Icon(Icons.arrow_back, color: _textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
+      body: PremiumBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 8),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 12),
-              Icon(Icons.sms_outlined, size: 56, color: p.accent.withValues(alpha: 0.9)),
-              const SizedBox(height: 18),
+              const SizedBox(height: 60),
               Text(
                 s.otpTitle,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: p.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  color: _textPrimary,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Text(
-                s.otpSubtitle,
-                style: TextStyle(fontSize: 14, color: p.textSecondary),
+                subtitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
               ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: p.accentSoft,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  widget.phone,
-                  style: TextStyle(fontSize: 13, color: p.accent),
-                ),
-              ),
-              const SizedBox(height: 34),
+              const SizedBox(height: 40),
               // صناديق الكود ثابتة الاتجاه (يسار -> يمين) مهما كان لغة الواجهة،
               // حتى يتطابق ترتيب الإدخال مع ترتيب join() وترتيب كود SMS.
               Directionality(
                 textDirection: TextDirection.ltr,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min,
                   children: List.generate(_digitCount, (i) {
-                    return SizedBox(
-                      width: boxWidth,
-                      height: 76,
-                      child: TextField(
-                        controller: _controllers[i],
-                        focusNode: _focuses[i],
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        onChanged: (v) => _onChanged(i, v),
-                        inputFormatters: [
-                          DigitInputFormatter(),
-                          LengthLimitingTextInputFormatter(1),
-                        ],
-                        style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            color: p.textPrimary),
-                        decoration: InputDecoration(
-                          counterText: '',
-                          filled: true,
-                          fillColor: p.bgElevated,
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(color: p.cardBorder),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide:
-                                BorderSide(color: p.accent, width: 1.6),
+                    return Padding(
+                      padding: EdgeInsets.only(
+                          left: i == 0 ? 0 : gap),
+                      child: SizedBox(
+                        width: boxSize,
+                        height: 56,
+                        child: TextField(
+                          controller: _controllers[i],
+                          focusNode: _focuses[i],
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          onChanged: (v) => _onChanged(i, v),
+                          inputFormatters: [
+                            DigitInputFormatter(),
+                            LengthLimitingTextInputFormatter(1),
+                          ],
+                          style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: _textPrimary),
+                          decoration: InputDecoration(
+                            counterText: '',
+                            filled: true,
+                            fillColor: Colors.white,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  const BorderSide(color: _accent, width: 1.4),
+                            ),
                           ),
                         ),
                       ),
@@ -200,33 +217,55 @@ class _OtpScreenState extends State<OtpScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              Center(
-                child: Text(
-                  _isReal ? s.otpRealHint : s.otpHint,
-                  style: TextStyle(fontSize: 12, color: p.textMuted),
-                ),
+              Text(
+                _isReal ? s.otpRealHint : s.otpHint,
+                style:
+                    const TextStyle(fontSize: 12, color: Color(0xFF8A8A94)),
               ),
               const SizedBox(height: 28),
               SizedBox(
-                width: double.infinity,
-                height: 56,
+                width: 320,
+                height: 50,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                   onPressed: _verifying ? null : _verify,
                   child: _verifying
                       ? const SizedBox(
-                          width: 24,
-                          height: 24,
+                          width: 22,
+                          height: 22,
                           child: CircularProgressIndicator(
                               strokeWidth: 2.5, color: Colors.white),
                         )
-                      : Text(s.continueLabel,
+                      : Text(
+                          s.continueLabel,
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w800)),
+                              fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              InkWell(
+                onTap: _verifying ? null : _resend,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Text(
+                    s.resendCode,
+                    style: const TextStyle(
+                        fontSize: 16, color: Color(0xFF666666)),
+                  ),
                 ),
               ),
             ],
           ),
         ),
+      ),
       ),
     );
   }

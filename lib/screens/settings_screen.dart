@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/strings.dart';
+import '../services/auth_service.dart';
 import '../store/masrofy_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pickers.dart';
+import 'budget_screen.dart';
+import 'login_screen.dart';
 
 class SettingsPage extends StatelessWidget {
   final MasrofyStore store;
@@ -31,26 +34,49 @@ class SettingsPage extends StatelessWidget {
               _Group(
                 palette: p,
                 children: [
-                  SwitchListTile(
-                    value: store.darkMode,
-                    onChanged: (_) => store.toggleTheme(),
-                    activeThumbColor: p.accent,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 14),
-                    secondary: Icon(
-                      store.darkMode
-                          ? Icons.dark_mode_outlined
-                          : Icons.light_mode_outlined,
-                      color: p.accent,
+                  Padding(
+                    padding:
+                        const EdgeInsets.fromLTRB(14, 12, 14, 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.palette_outlined, size: 20, color: p.accent),
+                        const SizedBox(width: 12),
+                        Text(s.themeLabel,
+                            style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: p.textPrimary)),
+                      ],
                     ),
-                    title: Text(s.themeLabel,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: p.textPrimary)),
-                    subtitle: Text(
-                      store.darkMode ? s.themeGreen : s.themeCream,
-                      style: TextStyle(color: p.textSecondary, fontSize: 12),
-                    ),
+                  ),
+                  _ThemeTile(
+                    selected: store.themeName == 'green',
+                    icon: Icons.light_mode_outlined,
+                    title: s.themeGreen,
+                    subtitle: s.themeGreenHint,
+                    accent: p.accent,
+                    textPrimary: p.textPrimary,
+                    textSecondary: p.textSecondary,
+                    onTap: () => store.setTheme('green'),
+                  ),
+                  _ThemeTile(
+                    selected: store.themeName == 'cream',
+                    icon: Icons.brush_outlined,
+                    title: s.themeCream,
+                    subtitle: s.themeCreamHint,
+                    accent: p.accent,
+                    textPrimary: p.textPrimary,
+                    textSecondary: p.textSecondary,
+                    onTap: () => store.setTheme('cream'),
+                  ),
+                  _ThemeTile(
+                    selected: store.themeName == 'dark',
+                    icon: Icons.dark_mode_outlined,
+                    title: s.themeDark,
+                    subtitle: s.themeDarkHint,
+                    accent: p.accent,
+                    textPrimary: p.textPrimary,
+                    textSecondary: p.textSecondary,
+                    onTap: () => store.setTheme('dark'),
                   ),
                   Divider(height: 1, color: p.cardBorder),
                   ListTile(
@@ -78,6 +104,64 @@ class SettingsPage extends StatelessWidget {
                         Icon(Icons.chevron_left, color: p.textMuted),
                     onTap: () => showMonthPicker(context, store),
                   ),
+                  Divider(height: 1, color: p.cardBorder),
+                  ListTile(
+                    leading: Icon(Icons.savings_outlined, color: p.accent),
+                    title: Text(s.manageBudget,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: p.textPrimary)),
+                    subtitle: Text(s.monthlyBudget,
+                        style: TextStyle(
+                            color: p.textSecondary, fontSize: 12)),
+                    trailing:
+                        Icon(Icons.chevron_left, color: p.textMuted),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => BudgetScreen(store: store),
+                    )),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _Group(
+                palette: p,
+                children: [
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: p.accentSoft,
+                      child: Icon(
+                        AuthService.instance.currentUser?.isGoogle == true
+                            ? Icons.account_circle_outlined
+                            : Icons.phone_android_outlined,
+                        color: p.accent,
+                      ),
+                    ),
+                    title: Text(s.accountLabel,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: p.textPrimary)),
+                    subtitle: Text(
+                      AuthService.instance.currentUser?.displayLabel ??
+                          s.localModeLabel,
+                      style:
+                          TextStyle(color: p.textSecondary, fontSize: 12),
+                    ),
+                  ),
+                  if (store.cloudSynced)
+                    Padding(
+                      padding:
+                          const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                      child: Row(
+                        children: [
+                          Icon(Icons.cloud_done_outlined,
+                              size: 16, color: p.accent),
+                          const SizedBox(width: 8),
+                          Text(s.cloudSyncLabel,
+                              style: TextStyle(
+                                  fontSize: 12, color: p.accent)),
+                        ],
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: 18),
@@ -89,7 +173,40 @@ class SettingsPage extends StatelessWidget {
                     title: Text(s.logout,
                         style: TextStyle(
                             fontWeight: FontWeight.w800, color: p.expense)),
-                    onTap: () => store.setLoggedIn(false),
+                    onTap: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: Text(s.logoutConfirmTitle),
+                          content: Text(s.logoutConfirmMessage),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(false),
+                              child: Text(s.no),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.of(ctx).pop(true),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: p.expense,
+                              ),
+                              child: Text(s.yes),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm != true) return;
+                      await AuthService.instance.signOut();
+                      store.detachUser();
+                      await store.setLoggedIn(false);
+                      if (!context.mounted) return;
+                      Navigator.of(context, rootNavigator: true)
+                          .pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (_) => LoginScreen(store: store),
+                        ),
+                        (route) => false,
+                      );
+                    },
                   ),
                 ],
               ),
@@ -121,6 +238,44 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
+class _ThemeTile extends StatelessWidget {
+  final bool selected;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accent;
+  final Color textPrimary;
+  final Color textSecondary;
+  final VoidCallback onTap;
+
+  const _ThemeTile({
+    required this.selected,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accent,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon, color: accent),
+      title: Text(title,
+          style: TextStyle(fontWeight: FontWeight.w700, color: textPrimary)),
+      subtitle: Text(subtitle,
+          style: TextStyle(color: textSecondary, fontSize: 12)),
+      trailing: Icon(
+        selected ? Icons.check_circle : Icons.circle_outlined,
+        color: selected ? accent : textSecondary,
+      ),
+    );
+  }
+}
+
 class _Group extends StatelessWidget {
   final MasrofyPalette palette;
   final List<Widget> children;
@@ -135,7 +290,11 @@ class _Group extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: palette.cardBorder),
       ),
-      child: Column(children: children),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.transparent,
+        child: Column(children: children),
+      ),
     );
   }
 }

@@ -81,12 +81,24 @@ class Strings {
 
   String get loginTitle => isAr ? 'تسجيل الدخول' : 'Sign in';
 
-  String get phoneHint => isAr ? 'أدخل رقم الموبايل' : 'Enter your phone number';
+  String get phoneHint => isAr ? 'رقم الهاتف' : 'Phone number';
+
+  String get passwordHint => isAr ? 'كلمة المرور' : 'Password';
+
+  String get forgotPassword =>
+      isAr ? 'هل نسيت كلمة المرور؟' : 'Forgot your password?';
+
+  String get forgotPasswordHint => isAr
+      ? 'استخدم رقم هاتفك وكود التحقق (تجريبي: 1234)'
+      : 'Use your phone number and the verification code (demo: 1234)';
 
   String get continueLabel => isAr ? 'متابعة' : 'Continue';
 
   String get phoneInvalid =>
       isAr ? 'رقم الموبايل غير صحيح' : 'Invalid phone number';
+
+  String get passwordInvalid =>
+      isAr ? 'كلمة المرور قصيرة جداً' : 'Password is too short';
 
   String get selectCountry => isAr ? 'اختر الدولة' : 'Select country';
 
@@ -94,8 +106,22 @@ class Strings {
 
   String get otpTitle => isAr ? 'كود التفعيل' : 'Verification code';
 
+  String get otpSubtitle4 => isAr
+      ? 'أدخل رمز التحقق المكوّن من 4 أرقام المرسل إلى هاتفك'
+      : 'Enter the 4-digit code sent to your phone';
+
+  String get otpSubtitle6 => isAr
+      ? 'أدخل رمز التحقق المكوّن من 6 أرقام المرسل إلى هاتفك'
+      : 'Enter the 6-digit code sent to your phone';
+
   String get otpSubtitle =>
       isAr ? 'أدخل الكود اللي اتجرسل ليك' : 'Enter the code sent to you';
+
+  String get resendCode =>
+      isAr ? 'لم يصلك الكود؟ إعادة إرسال' : "Didn't receive the code? Resend";
+
+  String get otpResent =>
+      isAr ? 'أُعيد إرسال الكود' : 'Code resent';
 
   String get otpHint => isAr ? 'الكود التجريبي: 1234' : 'Demo code: 1234';
 
@@ -114,6 +140,22 @@ class Strings {
   String get demoModeNotice =>
       isAr ? 'الوضع التجريبي (بدون Firebase): استخدم الكود 1234' : 'Demo mode (no Firebase): use code 1234';
 
+  String get signInWithGoogle =>
+      isAr ? 'تسجيل الدخول بحساب Google' : 'Sign in with Google';
+
+  String get googleSignInFailed =>
+      isAr ? 'تعذّر تسجيل الدخول بحساب Google' : 'Google sign-in failed';
+
+  String get orLabel => isAr ? 'أو' : 'or';
+
+  String get accountLabel => isAr ? 'الحساب' : 'Account';
+
+  String get localModeLabel =>
+      isAr ? 'وضع محلي (بدون حساب)' : 'Local mode (no account)';
+
+  String get cloudSyncLabel =>
+      isAr ? 'بياناتك محفوظة في السحابة' : 'Your data is synced to the cloud';
+
   String get startApp => isAr ? 'ابدأ' : 'Get started';
 
   String get welcomeStory =>
@@ -126,7 +168,7 @@ class Strings {
 
   String get navTransactions => isAr ? 'المعاملات' : 'Transactions';
 
-  String get navReports => isAr ? 'التقارير' : 'Reports';
+  String get navReports => isAr ? 'الإحصائيات' : 'Statistics';
 
   String get navSettings => isAr ? 'الإعدادات' : 'Settings';
 
@@ -150,15 +192,35 @@ class Strings {
 
   String get themeLabel => isAr ? 'المظهر' : 'Theme';
 
-  String get themeGreen => isAr ? 'أخضر داكن' : 'Dark green';
+  String get themeGreen => isAr ? 'أخضر' : 'Green';
 
-  String get themeCream => isAr ? 'كريمي فاتح' : 'Light cream';
+  String get themeGreenHint => isAr ? 'الواجهة الفاتحة الافتراضية' : 'Default light UI';
+
+  String get themeCream => isAr ? 'كريمي' : 'Cream';
+
+  String get themeCreamHint =>
+      isAr ? 'واجهة كريمية دافئة' : 'Warm cream UI';
+
+  String get themeDark => isAr ? 'داكن' : 'Dark';
+
+  String get themeDarkHint => isAr ? 'وضع ليلي أخضر داكن' : 'Dark green night mode';
 
   String get logout => isAr ? 'تسجيل الخروج' : 'Log out';
+
+  String get logoutConfirmTitle => isAr ? 'تسجيل الخروج' : 'Log out';
+
+  String get logoutConfirmMessage =>
+      isAr ? 'هل تريد تسجيل الخروج؟' : 'Do you want to log out?';
+
+  String get yes => isAr ? 'نعم' : 'Yes';
+
+  String get no => isAr ? 'لا' : 'No';
 
   String get noData => isAr ? 'لا توجد بيانات بعد' : 'No data yet';
 
   String get totalLabel => isAr ? 'الإجمالي' : 'Total';
+
+  String get donutCenterLabel => isAr ? 'المصاريف' : 'Expenses';
 
   String get viewAll => isAr ? 'عرض الكل' : 'View all';
 
@@ -221,4 +283,32 @@ class Strings {
 
   String get incomeUsed =>
       isAr ? 'من الدخل المستخدم' : 'of income used';
+
+  String get catIncome => isAr ? 'الدخل' : 'Income';
+
+  String get catFood => isAr ? 'الطعام' : 'Food';
+
+  String get catFun => isAr ? 'الترفيه' : 'Entertainment';
+
+  String get catBills => isAr ? 'الفواتير' : 'Bills';
+
+  String get catInstall => isAr ? 'الأقساط' : 'Installments';
+
+  String get headerTagline => isAr ? 'تحكم في أموالك' : 'Control your money';
+
+  String get homeGreet => isAr ? 'مرحباً بك' : 'Welcome back';
+
+  String get homeGreetSub =>
+      isAr ? 'خلي كل مصروف تحت السيطرة' : 'Keep every expense under control';
+
+  String get expensesThisMonth =>
+      isAr ? 'إجمالي المصروفات هذا الشهر' : 'Total expenses this month';
+
+  String get expensesByCategory =>
+      isAr ? 'المصروفات حسب الفئات' : 'Expenses by category';
+
+  String get recentTransactionsTitle =>
+      isAr ? 'أحدث المعاملات' : 'Recent transactions';
+
+  String get noNotifications => isAr ? 'لا توجد إشعارات حالياً' : 'No notifications yet';
 }

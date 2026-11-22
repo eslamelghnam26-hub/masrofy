@@ -46,10 +46,10 @@ class AppCategory {
   ];
 
   static const List<TxCategory> expense = [
-    TxCategory(id: 'food', name: 'طعام ومشروبات', nameEn: 'Food & Drinks', icon: Icons.restaurant_outlined, color: Color(0xFFEC6B5E)),
-    TxCategory(id: 'transport', name: 'مواصلات', nameEn: 'Transport', icon: Icons.directions_car_outlined, color: Color(0xFF6FA8DC)),
-    TxCategory(id: 'bills', name: 'فواتير', nameEn: 'Bills', icon: Icons.receipt_long_outlined, color: Color(0xFFE0A458)),
-    TxCategory(id: 'installments', name: 'أقساط', nameEn: 'Installments', icon: Icons.credit_card_outlined, color: Color(0xFF3FA9A0)),
+    TxCategory(id: 'food', name: 'طعام ومشروبات', nameEn: 'Food & Drinks', icon: Icons.restaurant_outlined, color: Color(0xFFFF5252)),
+    TxCategory(id: 'transport', name: 'مواصلات', nameEn: 'Transport', icon: Icons.directions_car_outlined, color: Color(0xFF8A2BE2)),
+    TxCategory(id: 'bills', name: 'فواتير', nameEn: 'Bills', icon: Icons.receipt_long_outlined, color: Color(0xFF007BFF)),
+    TxCategory(id: 'installments', name: 'أقساط', nameEn: 'Installments', icon: Icons.credit_card_outlined, color: Color(0xFF455A64)),
     TxCategory(id: 'shopping', name: 'تسوق', nameEn: 'Shopping', icon: Icons.shopping_bag_outlined, color: Color(0xFFB78B4B)),
     TxCategory(id: 'health', name: 'صحة', nameEn: 'Health', icon: Icons.medical_services_outlined, color: Color(0xFFEC6B5E)),
     TxCategory(id: 'education', name: 'تعليم', nameEn: 'Education', icon: Icons.school_outlined, color: Color(0xFF6FA8DC)),

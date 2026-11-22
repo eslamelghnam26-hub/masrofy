@@ -1,7 +1,7 @@
 name: masrofy
 description: "مصروفي - تطبيق إدارة المصاريف الشخصية"
 publish_to: 'none'
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
   sdk: ^3.12.0
@@ -16,6 +16,8 @@ dependencies:
     sdk: flutter
   firebase_core: ^4.15.0
   firebase_auth: ^6.7.0
+  cloud_firestore: ^6.10.2
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:
@@ -27,9 +29,9 @@ flutter_launcher_icons:
   android: true
   ios: true
   remove_alpha_ios: true
-  image_path: "assets/icon/app_icon.png"
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/icon/app_icon.png"
+  image_path: "assets/icon/app_icon_launcher.png"
+  adaptive_icon_background: "#027A3B"
+  adaptive_icon_foreground: "assets/icon/app_icon_launcher.png"
 
 flutter:
   uses-material-design: true
