@@ -5,7 +5,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'screens/login_screen.dart';
 import 'screens/root_screen.dart';
 import 'screens/splash_screen.dart';
-import 'services/auth_service.dart';
 import 'store/masrofy_store.dart';
 import 'theme/app_theme.dart';
 
@@ -13,18 +12,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ar');
   await initializeDateFormatting('en_US');
-  await AuthService.instance.init();
   final store = MasrofyStore();
   await store.load();
-
-  // جلسة Firebase موجودة؟ دخّل المستخدم تلقائياً واربط بياناته السحابية.
-  if (await AuthService.instance.hasActiveSession()) {
-    final uid = AuthService.instance.currentUid;
-    if (uid != null) {
-      await store.attachUser(uid);
-    }
-    await store.setLoggedIn(true);
-  }
 
   runApp(MasrofyApp(store: store));
 }

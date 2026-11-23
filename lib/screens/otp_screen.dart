@@ -36,12 +36,12 @@ class _OtpScreenState extends State<OtpScreen> {
   late final List<FocusNode> _focuses;
   bool _verifying = false;
 
-  bool get _isReal => widget.verificationId.isNotEmpty;
+  bool get _useSixDigits => widget.verificationId.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
-    _digitCount = _isReal ? 6 : 4;
+    _digitCount = _useSixDigits ? 6 : 4;
     _controllers = List.generate(_digitCount, (_) => TextEditingController());
     _focuses = List.generate(_digitCount, (_) => FocusNode());
     // تركيز تلقائي على أول خانة لبدء الإدخال فوراً.
@@ -80,16 +80,16 @@ class _OtpScreenState extends State<OtpScreen> {
 
   Future<void> _resend() async {
     final s = Strings(widget.store.language);
-    if (!_isReal) {
+    if (!_useSixDigits) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(s.otpHint)));
       return;
     }
     if (widget.phoneNumber.isEmpty) return;
-    final result = await AuthService.instance.sendCode(widget.phoneNumber);
+    await AuthService.instance.sendCode(widget.phoneNumber);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(result.isFailed ? s.otpSendFailed : s.otpResent)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(s.otpResent)));
   }
 
   Future<void> _verify() async {
@@ -108,10 +108,6 @@ class _OtpScreenState extends State<OtpScreen> {
     await delayed;
     if (!mounted) return;
     if (ok) {
-      final uid = AuthService.instance.currentUid;
-      if (uid != null) {
-        await widget.store.attachUser(uid);
-      }
       await widget.store.setLoggedIn(true);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -131,7 +127,7 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   Widget build(BuildContext context) {
     final s = Strings(widget.store.language);
-    final subtitle = _isReal ? s.otpSubtitle6 : s.otpSubtitle4;
+    final subtitle = _useSixDigits ? s.otpSubtitle6 : s.otpSubtitle4;
     final boxSize = 52.0;
     final gap = 14.0;
     // شاشة كود التفعيل بخلفية رصاصي فاتح دائماً مهما كان الثيم الحالي.
@@ -218,7 +214,7 @@ class _OtpScreenState extends State<OtpScreen> {
               ),
               const SizedBox(height: 18),
               Text(
-                _isReal ? s.otpRealHint : s.otpHint,
+                _useSixDigits ? s.otpRealHint : s.otpHint,
                 style:
                     const TextStyle(fontSize: 12, color: Color(0xFF8A8A94)),
               ),

@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:cloud_firestore/cloud_firestore.dart'
-    show FirebaseFirestore, FieldValue, SetOptions;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -32,7 +30,6 @@ class MasrofyStore extends ChangeNotifier {
   final Map<String, Map<String, double>> _budgets = {};
   bool _loaded = false;
   bool _loggedIn = false;
-  String? _cloudUid;
   bool _summaryAllTime = false;
   String _language = 'ar';
   String _theme = 'green';
@@ -53,9 +50,6 @@ class MasrofyStore extends ChangeNotifier {
   String get themeName => _theme;
 
   bool get loggedIn => _loggedIn;
-
-  /// هل البيانات مرتبطة بحساب سحابي حالياً؟
-  bool get cloudSynced => _cloudUid != null;
 
   String get language => _language;
 
@@ -226,7 +220,6 @@ class MasrofyStore extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_themeNewKey, _theme);
-    await _writeCloud();
   }
 
   Future<void> setTheme(String theme) async {
@@ -235,7 +228,6 @@ class MasrofyStore extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_themeNewKey, _theme);
-    await _writeCloud();
   }
 
   Future<void> setLanguage(String lang) async {
@@ -244,92 +236,6 @@ class MasrofyStore extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_langKey, lang);
-    await _writeCloud();
-  }
-
-  /// يربط المتجر بحساب المستخدم ويحمّل بياناته من Firestore.
-  /// أول دخول للمستخدم يرفع بياناته المحلية إلى السحابة.
-  Future<void> attachUser(String uid) async {
-    if (!_loaded) await load();
-    _cloudUid = uid;
-
-    // لقطة محلية قبل قراءة السحابة، تُستخدم كترحيل أول مرة.
-    final localTransactions = List<Transaction>.from(_transactions);
-    final localCategories = List<TxCategory>.from(_customCategories);
-    final localBudgets = _budgets.map(
-      (key, value) => MapEntry(key, Map<String, double>.from(value)),
-    );
-
-    try {
-      final doc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
-      final data = doc.data();
-      if (data != null && data.isNotEmpty) {
-        _applyCloudData(data);
-        await _persistLocalAll();
-      } else {
-        // لا توجد بيانات سحابية بعد: ارفع ما عند المستخدم كبداية.
-        _transactions = localTransactions;
-        _customCategories = localCategories;
-        _budgets
-          ..clear()
-          ..addAll(localBudgets);
-        AppCategory.customExpense = List.from(_customCategories);
-        await _persistLocalAll();
-        await _writeCloud();
-      }
-    } catch (_) {
-      // عند انقطاع الشبكة نحتفظ بالبيانات المحلية حتى عودة الاتصال.
-      _transactions = localTransactions;
-      _customCategories = localCategories;
-      _budgets
-        ..clear()
-        ..addAll(localBudgets);
-      AppCategory.customExpense = List.from(_customCategories);
-    }
-    notifyListeners();
-  }
-
-  /// يفصل المتجر عن الحساب الحالي ويفرغ البيانات المعروضة.
-  void detachUser() {
-    _cloudUid = null;
-    _transactions = [];
-    _customCategories = [];
-    _budgets.clear();
-    AppCategory.customExpense = [];
-    notifyListeners();
-  }
-
-  void _applyCloudData(Map<String, dynamic> data) {
-    final txRaw = data['transactions'] as List<dynamic>? ?? const [];
-    _transactions = txRaw
-        .whereType<Map>()
-        .map((e) => Transaction.fromJson(_stringMap(e)))
-        .toList();
-
-    final catsRaw = data['customCategories'] as List<dynamic>? ?? const [];
-    _customCategories = catsRaw
-        .whereType<Map>()
-        .map((e) => TxCategory.fromJson(_stringMap(e)))
-        .toList();
-    AppCategory.customExpense = List.from(_customCategories);
-
-    _budgets.clear();
-    final budgetsRaw = (data['budgets'] as Map?) ?? const {};
-    budgetsRaw.forEach((key, value) {
-      if (value is Map) {
-        _budgets[key.toString()] = value.map(
-          (cid, limit) => MapEntry(cid.toString(), (limit as num).toDouble()),
-        );
-      }
-    });
-
-    final lang = data['language'] as String?;
-    if (lang == 'ar' || lang == 'en') _language = lang!;
-    final theme = data['theme'] as String?;
-    if (theme == 'green' || theme == 'cream' || theme == 'dark') {
-      _theme = theme!;
-    }
   }
 
   Future<void> setLoggedIn(bool value) async {
@@ -398,21 +304,19 @@ class MasrofyStore extends ChangeNotifier {
   Future<void> _persist() async {
     notifyListeners();
     await _persistLocalAll();
-    await _writeCloud();
   }
 
   Future<void> _persistCategories() async {
     notifyListeners();
     await _persistLocalAll();
-    await _writeCloud();
   }
 
   Future<void> _persistBudgets() async {
     notifyListeners();
     await _persistLocalAll();
-    await _writeCloud();
   }
 
+  /// الحفظ المحلي الوحيد: كل بيانات التطبيق على الجهاز عبر SharedPreferences.
   Future<void> _persistLocalAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
@@ -426,29 +330,5 @@ class MasrofyStore extends ChangeNotifier {
     await prefs.setString(_budgetKey, jsonEncode(_budgets));
     await prefs.setString(_themeNewKey, _theme);
     await prefs.setString(_langKey, _language);
-  }
-
-  Map<String, dynamic> _stringMap(Map<dynamic, dynamic> map) =>
-      map.map((key, value) => MapEntry(key.toString(), value));
-
-  /// يكتب نسخة المستخدم في مستند واحد تحت /users/{uid}.
-  Future<void> _writeCloud() async {
-    final uid = _cloudUid;
-    if (uid == null) return;
-    try {
-      await FirebaseFirestore.instance.collection('users').doc(uid).set(
-        {
-          'transactions': _transactions.map((t) => t.toJson()).toList(),
-          'customCategories': _customCategories.map((c) => c.toJson()).toList(),
-          'budgets': _budgets,
-          'theme': _theme,
-          'language': _language,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
-    } catch (_) {
-      // الفشل هنا لا يوقف الاستخدام المحلي؛ سيُعاد المحاولة عند التعديل التالي.
-    }
   }
 }

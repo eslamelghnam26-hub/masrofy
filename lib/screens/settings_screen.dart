@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/strings.dart';
-import '../services/auth_service.dart';
 import '../store/masrofy_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pickers.dart';
@@ -127,48 +126,6 @@ class SettingsPage extends StatelessWidget {
                 palette: p,
                 children: [
                   ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: p.accentSoft,
-                      child: Icon(
-                        AuthService.instance.currentUser?.isGoogle == true
-                            ? Icons.account_circle_outlined
-                            : Icons.phone_android_outlined,
-                        color: p.accent,
-                      ),
-                    ),
-                    title: Text(s.accountLabel,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: p.textPrimary)),
-                    subtitle: Text(
-                      AuthService.instance.currentUser?.displayLabel ??
-                          s.localModeLabel,
-                      style:
-                          TextStyle(color: p.textSecondary, fontSize: 12),
-                    ),
-                  ),
-                  if (store.cloudSynced)
-                    Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(14, 0, 14, 12),
-                      child: Row(
-                        children: [
-                          Icon(Icons.cloud_done_outlined,
-                              size: 16, color: p.accent),
-                          const SizedBox(width: 8),
-                          Text(s.cloudSyncLabel,
-                              style: TextStyle(
-                                  fontSize: 12, color: p.accent)),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              _Group(
-                palette: p,
-                children: [
-                  ListTile(
                     leading: Icon(Icons.logout, color: p.expense),
                     title: Text(s.logout,
                         style: TextStyle(
@@ -195,8 +152,6 @@ class SettingsPage extends StatelessWidget {
                         ),
                       );
                       if (confirm != true) return;
-                      await AuthService.instance.signOut();
-                      store.detachUser();
                       await store.setLoggedIn(false);
                       if (!context.mounted) return;
                       Navigator.of(context, rootNavigator: true)

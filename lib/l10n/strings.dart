@@ -138,23 +138,7 @@ class Strings {
       isAr ? 'تعذر إرسال الكود. حاول مرة أخرى' : 'Failed to send code. Try again';
 
   String get demoModeNotice =>
-      isAr ? 'الوضع التجريبي (بدون Firebase): استخدم الكود 1234' : 'Demo mode (no Firebase): use code 1234';
-
-  String get signInWithGoogle =>
-      isAr ? 'تسجيل الدخول بحساب Google' : 'Sign in with Google';
-
-  String get googleSignInFailed =>
-      isAr ? 'تعذّر تسجيل الدخول بحساب Google' : 'Google sign-in failed';
-
-  String get orLabel => isAr ? 'أو' : 'or';
-
-  String get accountLabel => isAr ? 'الحساب' : 'Account';
-
-  String get localModeLabel =>
-      isAr ? 'وضع محلي (بدون حساب)' : 'Local mode (no account)';
-
-  String get cloudSyncLabel =>
-      isAr ? 'بياناتك محفوظة في السحابة' : 'Your data is synced to the cloud';
+      isAr ? 'نسخة محلية: استخدم الكود 1234' : 'Offline edition: use code 1234';
 
   String get startApp => isAr ? 'ابدأ' : 'Get started';
 

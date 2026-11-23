@@ -8,7 +8,6 @@ import '../store/masrofy_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/premium_background.dart';
 import 'otp_screen.dart';
-import 'welcome_screen.dart';
 
 class _Country {
   final String flag;
@@ -159,27 +158,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _submitting = false);
 
-    if (result.isFailed) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(s.otpSendFailed)));
-      return;
-    }
+    // النسخة المستقلة تستخدم كوداً تجريبياً محلياً دائماً.
     if (result.isDemo) {
       setState(() => _showDemoNotice = true);
-    }
-
-    if (result.isAuto && result.user != null) {
-      await widget.store.attachUser(result.user!.uid);
-      await widget.store.setLoggedIn(true);
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (_, _, _) => WelcomeScreen(store: widget.store),
-          transitionsBuilder: (_, animation, _, child) =>
-              FadeTransition(opacity: animation, child: child),
-        ),
-      );
-      return;
     }
 
     await Navigator.of(context).push(
@@ -190,33 +171,6 @@ class _LoginScreenState extends State<LoginScreen> {
           phoneNumber: '${_country.dialCode}$digits',
           verificationId: result.verificationId,
         ),
-      ),
-    );
-  }
-
-  Future<void> _signInWithGoogle() async {
-    final s = Strings(widget.store.language);
-    setState(() => _submitting = true);
-    FocusScope.of(context).unfocus();
-
-    final user = await AuthService.instance.signInWithGoogle();
-    if (!mounted) return;
-    setState(() => _submitting = false);
-
-    if (user == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(s.googleSignInFailed)));
-      return;
-    }
-
-    await widget.store.attachUser(user.uid);
-    await widget.store.setLoggedIn(true);
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, _, _) => WelcomeScreen(store: widget.store),
-        transitionsBuilder: (_, animation, _, child) =>
-            FadeTransition(opacity: animation, child: child),
       ),
     );
   }
@@ -425,45 +379,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w700),
                           ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    Expanded(
-                        child: Divider(color: Colors.grey.shade300, height: 1)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(s.orLabel,
-                          style:
-                              const TextStyle(fontSize: 12, color: _hint)),
-                    ),
-                    Expanded(
-                        child: Divider(color: Colors.grey.shade300, height: 1)),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton.icon(
-                    onPressed: _submitting ? null : _signInWithGoogle,
-                    icon: const Icon(Icons.g_mobiledata,
-                        size: 28, color: Color(0xFF4285F4)),
-                    label: Text(
-                      s.signInWithGoogle,
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: _textPrimary),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: BorderSide(color: Colors.grey.shade300),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
