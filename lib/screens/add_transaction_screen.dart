@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../formatters/digit_formatter.dart';
 import '../l10n/strings.dart';
 import '../models/transaction.dart';
 import '../store/masrofy_store.dart';
@@ -10,11 +11,13 @@ import '../theme/app_theme.dart';
 class AddTransactionScreen extends StatefulWidget {
   final MasrofyStore store;
   final TxType type;
+  final Transaction? editing;
 
   const AddTransactionScreen({
     super.key,
     required this.store,
     required this.type,
+    this.editing,
   });
 
   @override
@@ -24,17 +27,27 @@ class AddTransactionScreen extends StatefulWidget {
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
+
+  late TxType _type;
   late String _selectedCategory;
   late DateTime _selectedDate;
+  bool _saving = false;
 
-  bool get _isIncome => widget.type == TxType.income;
+  bool get _isIncome => _type == TxType.income;
+  bool get _isEditing => widget.editing != null;
 
   @override
   void initState() {
     super.initState();
-    _selectedCategory =
-        AppCategory.byId(_isIncome ? 'salary' : 'food', widget.type).id;
-    _selectedDate = DateTime.now();
+    final editing = widget.editing;
+    _type = editing?.type ?? widget.type;
+    _selectedCategory = editing?.categoryId ??
+        AppCategory.byId(_isIncome ? 'salary' : 'food', _type).id;
+    _selectedDate = editing?.date ?? DateTime.now();
+    if (editing != null) {
+      _amountController.text = editing.amount.toStringAsFixed(2);
+      _noteController.text = editing.note;
+    }
   }
 
   @override
@@ -44,28 +57,51 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     super.dispose();
   }
 
+  void _changeType(TxType type) {
+    if (type == _type) return;
+    setState(() {
+      _type = type;
+      _selectedCategory =
+          AppCategory.byId(type == TxType.income ? 'salary' : 'food', type).id;
+    });
+  }
+
   Future<void> _save() async {
+    if (_saving) return;
     final s = Strings(widget.store.language);
-    final amount = double.tryParse(_amountController.text.trim());
-    if (amount == null || amount <= 0) {
+    final raw = normalizeDigits(_amountController.text.trim());
+    final amount = double.tryParse(raw);
+    if (amount == null || amount <= 0 || amount.isNaN || amount.isInfinite) {
       _snack(s.enterValidAmount);
       return;
     }
+    if (amount > 1000000000) {
+      _snack(s.amountTooLarge);
+      return;
+    }
+
+    setState(() => _saving = true);
+    final editing = widget.editing;
     final tx = Transaction(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      type: widget.type,
+      id: editing?.id ??
+          '${DateTime.now().microsecondsSinceEpoch}-${DateTime.now().millisecond}',
+      type: _type,
       categoryId: _selectedCategory,
-      amount: amount,
+      amount: Money.round(amount),
       date: _selectedDate,
       note: _noteController.text.trim(),
     );
-    await widget.store.add(tx);
+
+    if (editing == null) {
+      await widget.store.add(tx);
+    } else {
+      await widget.store.update(tx);
+    }
     if (mounted) Navigator.of(context).pop();
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -73,10 +109,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final p = context.palette;
     final s = Strings(widget.store.language);
     final accent = _isIncome ? p.income : p.expense;
+
     return Scaffold(
       backgroundColor: p.bg,
       appBar: AppBar(
-        title: Text(_isIncome ? s.addIncome : s.addExpense),
+        title: Text(_isEditing ? s.editTransaction : (_isIncome ? s.addIncome : s.addExpense)),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
@@ -85,6 +122,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
+          _TypeSwitch(
+            isIncome: _isIncome,
+            incomeLabel: s.income,
+            expenseLabel: s.expenses,
+            incomeColor: p.income,
+            expenseColor: p.expense,
+            onChange: _changeType,
+          ),
+          const SizedBox(height: 16),
           _AmountCard(accent: accent, controller: _amountController, strings: s),
           const SizedBox(height: 20),
           Text(s.category,
@@ -94,7 +140,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   color: p.textSecondary)),
           const SizedBox(height: 10),
           _CategoryGrid(
-            type: widget.type,
+            type: _type,
             selected: _selectedCategory,
             strings: s,
             onSelect: (id) => setState(() => _selectedCategory = id),
@@ -122,10 +168,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       size: 17, color: p.textMuted),
                   const SizedBox(width: 10),
                   Text(
-                      widget.store.language == 'ar'
-                          ? DateFormat('EEEE، d MMMM y', 'ar').format(_selectedDate)
-                          : DateFormat('EEEE, d MMMM y', 'en').format(_selectedDate),
-                      style: TextStyle(color: p.textPrimary, fontSize: 14)),
+                    widget.store.language == 'ar'
+                        ? DateFormat('EEEE، d MMMM y', 'ar').format(_selectedDate)
+                        : DateFormat('EEEE, d MMMM y', 'en').format(_selectedDate),
+                    style: TextStyle(color: p.textPrimary, fontSize: 14),
+                  ),
                   const Spacer(),
                   Icon(Icons.chevron_left, size: 20, color: p.textMuted),
                 ],
@@ -143,15 +190,25 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
           ),
           const SizedBox(height: 22),
-          ElevatedButton(
-            onPressed: _save,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: accent,
-              foregroundColor: Colors.white,
-              textStyle: const TextStyle(
-                  fontSize: 15, fontWeight: FontWeight.w700),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _saving ? null : _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accent,
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+              child: _saving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2.5, color: Colors.white),
+                    )
+                  : Text(s.saveTransaction),
             ),
-            child: Text(s.saveTransaction),
           ),
         ],
       ),
@@ -164,7 +221,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final d = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime(2020),
+      firstDate: DateTime(2000),
       lastDate: DateTime.now().add(const Duration(days: 1)),
       helpText: s.chooseDate,
       cancelText: s.cancel,
@@ -190,6 +247,93 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 }
 
+class _TypeSwitch extends StatelessWidget {
+  final bool isIncome;
+  final String incomeLabel;
+  final String expenseLabel;
+  final Color incomeColor;
+  final Color expenseColor;
+  final ValueChanged<TxType> onChange;
+
+  const _TypeSwitch({
+    required this.isIncome,
+    required this.incomeLabel,
+    required this.expenseLabel,
+    required this.incomeColor,
+    required this.expenseColor,
+    required this.onChange,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: p.bgElevated,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: p.cardBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _Choice(
+              label: incomeLabel,
+              selected: isIncome,
+              color: incomeColor,
+              onTap: () => onChange(TxType.income),
+            ),
+          ),
+          Expanded(
+            child: _Choice(
+              label: expenseLabel,
+              selected: !isIncome,
+              color: expenseColor,
+              onTap: () => onChange(TxType.expense),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Choice extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _Choice({
+    required this.label,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(11),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.18) : Colors.transparent,
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Text(label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: selected ? color : p.textSecondary)),
+      ),
+    );
+  }
+}
+
 class _AmountCard extends StatelessWidget {
   final Color accent;
   final TextEditingController controller;
@@ -211,10 +355,7 @@ class _AmountCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent.withValues(alpha: 0.3),
-            p.bgElevated,
-          ],
+          colors: [accent.withValues(alpha: 0.3), p.bgElevated],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -236,6 +377,7 @@ class _AmountCard extends StatelessWidget {
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
+                    DigitInputFormatter(),
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                   ],
                   textAlign: TextAlign.center,

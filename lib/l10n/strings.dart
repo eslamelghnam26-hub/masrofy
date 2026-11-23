@@ -74,77 +74,6 @@ class Strings {
 
   String dateLocale() => isAr ? 'ar' : 'en';
 
-  String get welcomeTitle => isAr ? 'أهلاً بيك في مصروفي' : 'Welcome to Masrofy';
-
-  String get welcomeSubtitle =>
-      isAr ? 'اقفل التطبيق وابدأ تتحكم في فلوسك خطوة بخطوة' : 'Open the app and start taking control of your money';
-
-  String get loginTitle => isAr ? 'تسجيل الدخول' : 'Sign in';
-
-  String get phoneHint => isAr ? 'رقم الهاتف' : 'Phone number';
-
-  String get passwordHint => isAr ? 'كلمة المرور' : 'Password';
-
-  String get forgotPassword =>
-      isAr ? 'هل نسيت كلمة المرور؟' : 'Forgot your password?';
-
-  String get forgotPasswordHint => isAr
-      ? 'استخدم رقم هاتفك وكود التحقق (تجريبي: 1234)'
-      : 'Use your phone number and the verification code (demo: 1234)';
-
-  String get continueLabel => isAr ? 'متابعة' : 'Continue';
-
-  String get phoneInvalid =>
-      isAr ? 'رقم الموبايل غير صحيح' : 'Invalid phone number';
-
-  String get passwordInvalid =>
-      isAr ? 'كلمة المرور قصيرة جداً' : 'Password is too short';
-
-  String get selectCountry => isAr ? 'اختر الدولة' : 'Select country';
-
-  String get searchCountry => isAr ? 'ابحث عن دولة' : 'Search country';
-
-  String get otpTitle => isAr ? 'كود التفعيل' : 'Verification code';
-
-  String get otpSubtitle4 => isAr
-      ? 'أدخل رمز التحقق المكوّن من 4 أرقام المرسل إلى هاتفك'
-      : 'Enter the 4-digit code sent to your phone';
-
-  String get otpSubtitle6 => isAr
-      ? 'أدخل رمز التحقق المكوّن من 6 أرقام المرسل إلى هاتفك'
-      : 'Enter the 6-digit code sent to your phone';
-
-  String get otpSubtitle =>
-      isAr ? 'أدخل الكود اللي اتجرسل ليك' : 'Enter the code sent to you';
-
-  String get resendCode =>
-      isAr ? 'لم يصلك الكود؟ إعادة إرسال' : "Didn't receive the code? Resend";
-
-  String get otpResent =>
-      isAr ? 'أُعيد إرسال الكود' : 'Code resent';
-
-  String get otpHint => isAr ? 'الكود التجريبي: 1234' : 'Demo code: 1234';
-
-  String get otpRealHint =>
-      isAr ? 'أدخل الكود اللي وصل في رسالة SMS' : 'Enter the code from the SMS';
-
-  String get otpWrong => isAr ? 'الكود غير صحيح' : 'Wrong code';
-
-  String get otpIncomplete => isAr
-      ? 'أدخل كل أرقام الكود'
-      : 'Enter all the digits of the code';
-
-  String get otpSendFailed =>
-      isAr ? 'تعذر إرسال الكود. حاول مرة أخرى' : 'Failed to send code. Try again';
-
-  String get demoModeNotice =>
-      isAr ? 'نسخة محلية: استخدم الكود 1234' : 'Offline edition: use code 1234';
-
-  String get startApp => isAr ? 'ابدأ' : 'Get started';
-
-  String get welcomeStory =>
-      isAr ? 'تتبع كل جنيه فين راح وجاء' : 'Track every pound in and out';
-
   String get appSubtitle =>
       isAr ? 'إدارة أموالك.. لحياة أفضل' : 'Manage your money for a better life';
 
@@ -188,13 +117,6 @@ class Strings {
   String get themeDark => isAr ? 'داكن' : 'Dark';
 
   String get themeDarkHint => isAr ? 'وضع ليلي أخضر داكن' : 'Dark green night mode';
-
-  String get logout => isAr ? 'تسجيل الخروج' : 'Log out';
-
-  String get logoutConfirmTitle => isAr ? 'تسجيل الخروج' : 'Log out';
-
-  String get logoutConfirmMessage =>
-      isAr ? 'هل تريد تسجيل الخروج؟' : 'Do you want to log out?';
 
   String get yes => isAr ? 'نعم' : 'Yes';
 
@@ -295,4 +217,157 @@ class Strings {
       isAr ? 'أحدث المعاملات' : 'Recent transactions';
 
   String get noNotifications => isAr ? 'لا توجد إشعارات حالياً' : 'No notifications yet';
+
+  // ----- إدارة العمليات -----
+  String get edit => isAr ? 'تعديل' : 'Edit';
+
+  String get editTransaction => isAr ? 'تعديل العملية' : 'Edit transaction';
+
+  String get deleteTransactionTitle =>
+      isAr ? 'حذف العملية' : 'Delete transaction';
+
+  String get deleteTransactionMessage =>
+      isAr ? 'هل تريد حذف هذه العملية نهائياً؟' : 'Delete this transaction permanently?';
+
+  String get deleted => isAr ? 'تم الحذف' : 'Deleted';
+
+  String get restored => isAr ? 'تمت الاستعادة' : 'Restored';
+
+  String get undo => isAr ? 'تراجع' : 'Undo';
+
+  String get search => isAr ? 'ابحث في العمليات...' : 'Search transactions...';
+
+  String get filterAll => isAr ? 'الكل' : 'All';
+
+  String get filterIncome => isAr ? 'الدخل' : 'Income';
+
+  String get filterExpense => isAr ? 'المصروفات' : 'Expenses';
+
+  String get allCategories => isAr ? 'كل التصنيفات' : 'All categories';
+
+  String get sortBy => isAr ? 'ترتيب حسب' : 'Sort by';
+
+  String get sortDate => isAr ? 'التاريخ' : 'Date';
+
+  String get sortAmount => isAr ? 'المبلغ' : 'Amount';
+
+  String get newestFirst => isAr ? 'الأحدث أولاً' : 'Newest first';
+
+  String get oldestFirst => isAr ? 'الأقدم أولاً' : 'Oldest first';
+
+  String get highestFirst => isAr ? 'الأكبر أولاً' : 'Highest first';
+
+  String get lowestFirst => isAr ? 'الأصغر أولاً' : 'Lowest first';
+
+  String get noFilterResults =>
+      isAr ? 'لا توجد نتائج مطابقة' : 'No matching results';
+
+  String get amountTooLarge =>
+      isAr ? 'المبلغ كبير جداً' : 'Amount is too large';
+
+  // ----- التصنيفات والميزانية -----
+  String get deleteCategoryTitle =>
+      isAr ? 'حذف التصنيف' : 'Delete category';
+
+  String get deleteCategoryMessage => isAr
+      ? 'سيتم نقل عمليات هذا التصنيف إلى "أخرى" مع الحفاظ على المبالغ والتواريخ.'
+      : 'Transactions in this category will move to "Other" with amounts and dates preserved.';
+
+  String get budgetExceeded =>
+      isAr ? 'تجاوزت حدود بعض التصنيفات هذا الشهر' : 'Some categories exceeded their monthly limit';
+
+  // ----- الرصيد الافتتاحي -----
+  String get openingBalance => isAr ? 'الرصيد الافتتاحي' : 'Opening balance';
+
+  String get openingBalanceHint =>
+      isAr ? 'المبلغ الموجود قبل بدء التسجيل في التطبيق' : 'Amount you had before tracking started';
+
+  // ----- قفل التطبيق -----
+  String get appLock => isAr ? 'قفل التطبيق (PIN)' : 'App Lock (PIN)';
+
+  String get appLockHint =>
+      isAr ? 'رقم سري مكوّن من 4 أرقام لحماية بياناتك محلياً' : 'A 4-digit local privacy code';
+
+  String get pinPrivacyNote => isAr
+      ? 'هذا قفل خصوصية محلي وليس بديلاً عن قفل الجهاز. يُحفظ الرقم كتجزئة مشوّشة فقط.'
+      : 'A local privacy lock, not a replacement for device security. Only a salted hash is stored.';
+
+  String get pinEntryTitle => isAr ? 'أدخل رمز القفل' : 'Enter PIN';
+
+  String get pinEntrySubtitle =>
+      isAr ? 'أدخل الأرقام الأربعة لفتح مصروفي' : 'Enter the 4-digit code to open Masrofy';
+
+  String get pinCreateTitle => isAr ? 'أنشئ رمز القفل' : 'Create PIN';
+
+  String get pinConfirmTitle => isAr ? 'أكد رمز القفل' : 'Confirm PIN';
+
+  String get pinChangeTitle => isAr ? 'تغيير رمز القفل' : 'Change PIN';
+
+  String get pinCurrentTitle => isAr ? 'أدخل الرمز الحالي' : 'Enter current PIN';
+
+  String get pinNewTitle => isAr ? 'الرمز الجديد' : 'New PIN';
+
+  String get pinDisableTitle => isAr ? 'إلغاء قفل التطبيق' : 'Disable app lock';
+
+  String get pinInvalid => isAr ? 'أدخل 4 أرقام صحيحة' : 'Enter exactly 4 digits';
+
+  String get pinMismatch => isAr ? 'الرمزان غير متطابقين' : 'PINs do not match';
+
+  String get pinWrong => isAr ? 'الرمز غير صحيح' : 'Incorrect PIN';
+
+  String get pinSetSuccess =>
+      isAr ? 'تم تفعيل قفل التطبيق' : 'App lock enabled';
+
+  String get pinChanged => isAr ? 'تم تغيير الرمز' : 'PIN changed';
+
+  String get pinDisabled => isAr ? 'تم إلغاء قفل التطبيق' : 'App lock disabled';
+
+  String get pinEnable => isAr ? 'تفعيل القفل' : 'Enable lock';
+
+  String get pinChange => isAr ? 'تغيير الرمز' : 'Change PIN';
+
+  String get pinDisable => isAr ? 'إلغاء القفل' : 'Disable lock';
+
+  // ----- النسخ الاحتياطي -----
+  String get backupRestore => isAr ? 'النسخ الاحتياطي والاستعادة' : 'Backup & restore';
+
+  String get backupHint => isAr
+      ? 'ملف JSON محلي لا يغني عن نسخة الجهاز، لكنه يحفظ بياناتك عند تغيير الهاتف.'
+      : 'A local JSON file helps move your data between devices.';
+
+  String get exportBackup => isAr ? 'تصدير نسخة احتياطية' : 'Export backup';
+
+  String get importBackup => isAr ? 'استيراد نسخة احتياطية' : 'Import backup';
+
+  String get importConfirmTitle =>
+      isAr ? 'استيراد النسخة الاحتياطية' : 'Import backup';
+
+  String get importConfirmMessage => isAr
+      ? 'سيتم استبدال جميع البيانات الحالية بالنسخة المستوردة. هل تريد المتابعة؟'
+      : 'This will replace all current data. Continue?';
+
+  String get backupExported =>
+      isAr ? 'تم حفظ النسخة الاحتياطية' : 'Backup exported';
+
+  String get backupCancelled =>
+      isAr ? 'تم إلغاء الاستيراد' : 'Import cancelled';
+
+  String get backupImported =>
+      isAr ? 'تم استيراد البيانات بنجاح' : 'Backup imported successfully';
+
+  String get backupInvalid =>
+      isAr ? 'ملف النسخة الاحتياطية غير صالح أو غير متوافق' : 'Invalid or incompatible backup file';
+
+  String get backupExportFailed =>
+      isAr ? 'تعذر حفظ النسخة الاحتياطية' : 'Could not export backup';
+
+  String get backupImportFailed =>
+      isAr ? 'تعذر قراءة النسخة الاحتياطية' : 'Could not read backup';
+
+  // ----- أخطاء الحفظ -----
+  String get saveFailed =>
+      isAr ? 'تعذر حفظ البيانات على الجهاز' : 'Could not save data on this device';
+
+  String get loadFailed =>
+      isAr ? 'تعذر تحميل البيانات المحلية' : 'Could not load local data';
 }

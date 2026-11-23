@@ -48,6 +48,16 @@ class HomeScreen extends StatelessWidget {
     ));
   }
 
+  void _openEdit(BuildContext context, Transaction tx) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => AddTransactionScreen(
+        store: store,
+        type: tx.type,
+        editing: tx,
+      ),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = Strings(store.language);
@@ -104,6 +114,7 @@ class HomeScreen extends StatelessWidget {
                     strings: s,
                     items: recent,
                     onViewAll: () => onOpenTab(1),
+                    onEdit: (tx) => _openEdit(context, tx),
                   ),
                 ],
               ),
@@ -930,12 +941,14 @@ class _RecentCard extends StatelessWidget {
   final Strings strings;
   final List<Transaction> items;
   final VoidCallback onViewAll;
+  final ValueChanged<Transaction> onEdit;
 
   const _RecentCard({
     required this.store,
     required this.strings,
     required this.items,
     required this.onViewAll,
+    required this.onEdit,
   });
 
   @override
@@ -957,7 +970,12 @@ class _RecentCard extends StatelessWidget {
             const _EmptyRecent()
           else
             for (var i = 0; i < items.length; i++) ...[
-              _RecentRow(tx: items[i], strings: s),
+              _RecentRow(
+                tx: items[i],
+                strings: s,
+                store: store,
+                onEdit: () => onEdit(items[i]),
+              ),
               if (i != items.length - 1)
                 Divider(height: 1, thickness: 0.6, color: p.cardBorder),
             ],
@@ -967,37 +985,90 @@ class _RecentCard extends StatelessWidget {
   }
 }
 
-class _RecentRow extends StatelessWidget {
+class _RecentRow extends StatefulWidget {
   final Transaction tx;
   final Strings strings;
+  final MasrofyStore store;
+  final VoidCallback onEdit;
 
-  const _RecentRow({required this.tx, required this.strings});
+  const _RecentRow({
+    required this.tx,
+    required this.strings,
+    required this.store,
+    required this.onEdit,
+  });
+
+  @override
+  State<_RecentRow> createState() => _RecentRowState();
+}
+
+class _RecentRowState extends State<_RecentRow> {
+  bool _deleting = false;
+
+  Future<void> _delete() async {
+    if (_deleting) return;
+    final s = widget.strings;
+    final p = context.palette;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(s.deleteTransactionTitle),
+        content: Text(s.deleteTransactionMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(s.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: p.expense),
+            child: Text(s.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    setState(() => _deleting = true);
+    final removed = await widget.store.remove(widget.tx.id);
+    if (!mounted) return;
+    setState(() => _deleting = false);
+    if (removed == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(s.deleted),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: s.undo,
+          onPressed: () => widget.store.restore(removed),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final s = strings;
+    final s = widget.strings;
+    final tx = widget.tx;
     final cat = AppCategory.byId(tx.categoryId, tx.type);
     final isIncome = tx.type == TxType.income;
-    final fmt = NumberFormat.currency(
-        locale: s.currencyLocale(), symbol: s.currencySymbol());
-    final title =
-        tx.note.isNotEmpty ? tx.note : cat.localName(s.language);
+    final fmt = NumberFormat.decimalPattern(s.dateLocale());
+    final title = tx.note.isNotEmpty ? tx.note : cat.localName(s.language);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               color: cat.color.withValues(alpha: 0.14),
               shape: BoxShape.circle,
             ),
-            child: Icon(cat.icon, size: 19, color: cat.color),
+            child: Icon(cat.icon, size: 18, color: cat.color),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1006,23 +1077,47 @@ class _RecentRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: p.textPrimary)),
                 const SizedBox(height: 2),
                 Text(DateFormat('d MMM y', s.dateLocale()).format(tx.date),
-                    style: TextStyle(fontSize: 11, color: p.textMuted)),
+                    style: TextStyle(fontSize: 10.5, color: p.textMuted)),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Text(
             '${isIncome ? '+' : '-'}${fmt.format(tx.amount)}',
             style: TextStyle(
-              fontSize: 13.5,
+              fontSize: 13,
               fontWeight: FontWeight.w800,
               color: isIncome ? p.income : p.expense,
             ),
+          ),
+          const SizedBox(width: 2),
+          IconButton(
+            tooltip: s.edit,
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+            padding: EdgeInsets.zero,
+            icon: Icon(Icons.edit_outlined, size: 16, color: p.textMuted),
+            onPressed: widget.onEdit,
+          ),
+          IconButton(
+            tooltip: s.delete,
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+            padding: EdgeInsets.zero,
+            icon: _deleting
+                ? SizedBox(
+                    width: 13,
+                    height: 13,
+                    child:
+                        CircularProgressIndicator(strokeWidth: 2, color: p.expense),
+                  )
+                : Icon(Icons.delete_outline, size: 17, color: p.expense),
+            onPressed: _deleting ? null : _delete,
           ),
         ],
       ),

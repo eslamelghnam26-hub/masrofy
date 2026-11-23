@@ -14,7 +14,8 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_localizations:
     sdk: flutter
-
+  crypto: ^3.0.8
+  file_picker: ^13.4.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -33,4 +34,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/
-    - assets/illustrations/
+    - google_fonts/

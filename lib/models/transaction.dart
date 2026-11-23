@@ -2,6 +2,17 @@ import 'package:flutter/material.dart';
 
 enum TxType { income, expense }
 
+/// كل العمليات الحسابية تتم بالـcents لتجنب أخطاء الفاصلة العائمة.
+class Money {
+  const Money._();
+
+  static int toCents(double value) => (value * 100).round();
+
+  static double fromCents(int cents) => cents / 100;
+
+  static double round(double value) => fromCents(toCents(value));
+}
+
 class TxCategory {
   final String id;
   final String name;
@@ -27,13 +38,33 @@ class TxCategory {
         'color': color.toARGB32(),
       };
 
-  factory TxCategory.fromJson(Map<String, dynamic> json) => TxCategory(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        nameEn: (json['nameEn'] as String?) ?? (json['name'] as String),
-        icon: AppCategory.iconFor(json['icon'] as int),
-        color: Color(json['color'] as int),
+  factory TxCategory.fromJson(Map<String, dynamic> json) =>
+      TxCategory.tryFromJson(json) ??
+      TxCategory(
+        id: 'custom_recovered',
+        name: 'تصنيف مستعاد',
+        nameEn: 'Recovered category',
+        icon: Icons.label_outline,
+        color: const Color(0xFF8D8D8D),
       );
+
+  /// يرفض أي بيانات تالفة بدل رمي استثناء يوقف تحميل التطبيق.
+  static TxCategory? tryFromJson(Map<String, dynamic> json) {
+    final id = json['id'];
+    final name = json['name'];
+    if (id is! String || id.trim().isEmpty) return null;
+    if (name is! String || name.trim().isEmpty) return null;
+    final iconCode = json['icon'];
+    final colorValue = json['color'];
+    final nameEn = json['nameEn'];
+    return TxCategory(
+      id: id,
+      name: name,
+      nameEn: nameEn is String && nameEn.trim().isNotEmpty ? nameEn : name,
+      icon: iconCode is int ? AppCategory.iconFor(iconCode) : Icons.label_outline,
+      color: colorValue is int ? Color(colorValue) : const Color(0xFF8D8D8D),
+    );
+  }
 }
 
 class AppCategory {
@@ -69,7 +100,6 @@ class AppCategory {
     Icons.sports_esports_outlined,
   ];
 
-  /// إعادة بناء أيقونة من رمزها المخزّن.
   static IconData iconFor(int codePoint) {
     for (final icon in paletteIcons) {
       if (icon.codePoint == codePoint) return icon;
@@ -77,7 +107,6 @@ class AppCategory {
     return Icons.label_outline;
   }
 
-  /// تصنيفات مصروفات مخصّصة أضافها المستخدم (تُحمَّل من التخزين).
   static List<TxCategory> customExpense = [];
 
   static List<TxCategory> get allExpense => [...expense, ...customExpense];
@@ -90,12 +119,14 @@ class AppCategory {
     for (final c in list) {
       if (c.id == id) return c;
     }
-    if (type == TxType.income) return income.last;
-    for (final c in expense) {
-      if (c.id == 'other') return c;
-    }
-    return expense.last;
+    return type == TxType.income ? income.last : expense.last;
   }
+
+  /// معرّفات التصنيفات الأساسية، تُحفظ في النسخة الاحتياطية للترحيل المستقبلي.
+  static List<String> get defaultIds => [
+        ...income.map((c) => c.id),
+        ...expense.map((c) => c.id),
+      ];
 }
 
 class Transaction {
@@ -115,10 +146,19 @@ class Transaction {
     this.note = '',
   });
 
-  Transaction copyWith({double? amount, String? categoryId, DateTime? date, String? note}) {
+  int get amountCents => Money.toCents(amount);
+
+  Transaction copyWith({
+    String? id,
+    TxType? type,
+    String? categoryId,
+    double? amount,
+    DateTime? date,
+    String? note,
+  }) {
     return Transaction(
-      id: id,
-      type: type,
+      id: id ?? this.id,
+      type: type ?? this.type,
       categoryId: categoryId ?? this.categoryId,
       amount: amount ?? this.amount,
       date: date ?? this.date,
@@ -130,17 +170,47 @@ class Transaction {
         'id': id,
         'type': type.name,
         'categoryId': categoryId,
-        'amount': amount,
+        'amount': Money.round(amount),
         'date': date.millisecondsSinceEpoch,
         'note': note,
       };
 
-  factory Transaction.fromJson(Map<String, dynamic> json) => Transaction(
-        id: json['id'] as String,
-        type: json['type'] == 'income' ? TxType.income : TxType.expense,
-        categoryId: json['categoryId'] as String,
-        amount: (json['amount'] as num).toDouble(),
-        date: DateTime.fromMillisecondsSinceEpoch(json['date'] as int),
-        note: json['note'] as String? ?? '',
+  factory Transaction.fromJson(Map<String, dynamic> json) =>
+      Transaction.tryFromJson(json) ??
+      Transaction(
+        id: 'recovered_${DateTime.now().microsecondsSinceEpoch}',
+        type: TxType.expense,
+        categoryId: 'other',
+        amount: 0,
+        date: DateTime.now(),
       );
+
+  /// decoder آمن: يرفض البيانات غير المنطقية بدل إفساد الحسابات.
+  static Transaction? tryFromJson(Map<String, dynamic> json) {
+    final id = json['id'];
+    final typeRaw = json['type'];
+    final categoryId = json['categoryId'];
+    final amountRaw = json['amount'];
+    final dateRaw = json['date'];
+    final noteRaw = json['note'];
+
+    if (id is! String || id.trim().isEmpty) return null;
+    if (categoryId is! String || categoryId.trim().isEmpty) return null;
+    if (typeRaw != 'income' && typeRaw != 'expense') return null;
+    if (amountRaw is! num) return null;
+    final amount = Money.round(amountRaw.toDouble());
+    if (amount <= 0 || amount.isNaN || amount.isInfinite) return null;
+    if (dateRaw is! int) return null;
+    final date = DateTime.fromMillisecondsSinceEpoch(dateRaw);
+    if (date.year < 2000 || date.year > DateTime.now().year + 5) return null;
+
+    return Transaction(
+      id: id,
+      type: typeRaw == 'income' ? TxType.income : TxType.expense,
+      categoryId: categoryId,
+      amount: amount,
+      date: date,
+      note: noteRaw is String ? noteRaw : '',
+    );
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../formatters/digit_formatter.dart';
 import '../l10n/strings.dart';
 import '../models/transaction.dart';
 import '../store/masrofy_store.dart';
@@ -35,6 +36,32 @@ class BudgetScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
             children: [
               _BudgetSummary(store: store, strings: s, palette: p),
+              if (store.hasOverBudgetCategory) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: p.expense.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: p.expense.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded,
+                          size: 18, color: p.expense),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(s.budgetExceeded,
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: p.expense)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 14),
               Text(s.budgetInfo,
                   style: TextStyle(fontSize: 12, color: p.textMuted)),
@@ -49,7 +76,7 @@ class BudgetScreen extends StatelessWidget {
                   strings: s,
                   palette: p,
                   onTap: () => _editBudget(context, store, cat),
-                  onDelete: () => store.removeCustomCategory(cat.id),
+                  onDelete: () => _confirmCategoryDelete(context, store, cat),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -82,6 +109,31 @@ class BudgetScreen extends StatelessWidget {
   String _trimNum(double v) =>
       v == v.roundToDouble() ? v.toInt().toString() : v.toString();
 
+  Future<void> _confirmCategoryDelete(
+      BuildContext context, MasrofyStore store, TxCategory cat) async {
+    final s = Strings(store.language);
+    final p = context.palette;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(s.deleteCategoryTitle),
+        content: Text(s.deleteCategoryMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(s.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: p.expense),
+            child: Text(s.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) await store.removeCustomCategory(cat.id);
+  }
+
   Future<void> _editBudget(
       BuildContext context, MasrofyStore store, TxCategory cat) async {
     final s = Strings(store.language);
@@ -103,6 +155,7 @@ class BudgetScreen extends StatelessWidget {
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [
+            DigitInputFormatter(),
             FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
           ],
           decoration: InputDecoration(
@@ -126,7 +179,7 @@ class BudgetScreen extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () {
-              final v = double.tryParse(controller.text.trim());
+              final v = double.tryParse(normalizeDigits(controller.text.trim()));
               store.setBudget(cat.id, v ?? 0);
               Navigator.of(ctx).pop();
             },
