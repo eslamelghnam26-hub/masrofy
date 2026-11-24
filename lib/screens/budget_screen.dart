@@ -294,11 +294,20 @@ class _BudgetSummary extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              Text('${strings.spent}: ${fmt.format(spent)}',
-                  style: TextStyle(fontSize: 12, color: sub)),
-              const Spacer(),
-              Text('${strings.remaining}: ${fmt.format(total - spent)}',
-                  style: TextStyle(fontSize: 12, color: sub)),
+              Flexible(
+                child: Text('${strings.spent}: ${fmt.format(spent)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: sub)),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text('${strings.remaining}: ${fmt.format(total - spent)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(fontSize: 12, color: sub)),
+              ),
             ],
           ),
         ],
@@ -382,6 +391,8 @@ class _CategoryBudgetTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(cat.localName(strings.language),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w700,
@@ -391,6 +402,8 @@ class _CategoryBudgetTile extends StatelessWidget {
                           hasLimit
                               ? '${fmt.format(spent)} / ${fmt.format(limit)}'
                               : '${strings.noLimit} • ${fmt.format(spent)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                               fontSize: 11,
                               color: over ? p.expense : p.textMuted,

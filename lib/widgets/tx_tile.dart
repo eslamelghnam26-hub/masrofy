@@ -139,20 +139,30 @@ class _TxTileState extends State<TxTile> {
             ),
           ),
           const SizedBox(width: 6),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '$sign${fmt.format(tx.amount)} ${s.currencySymbol()}',
-                style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    color: isIncome ? p.income : p.expense),
-              ),
-              const SizedBox(height: 2),
-              Text(DateFormat('d MMM', s.dateLocale()).format(tx.date),
-                  style: TextStyle(fontSize: 10, color: p.textMuted)),
-            ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '$sign${fmt.format(tx.amount)} ${s.currencySymbol()}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: isIncome ? p.income : p.expense),
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    DateFormat('d MMM', s.dateLocale()).format(tx.date),
+                    style: TextStyle(fontSize: 10, color: p.textMuted),
+                  ),
+                ),
+              ],
+            ),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -192,8 +202,8 @@ class _TxTileState extends State<TxTile> {
       confirmDismiss: (_) => _confirmDelete(),
       onDismissed: (_) => _delete(),
       background: Container(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 20),
+        alignment: AlignmentDirectional.centerEnd,
+        padding: const EdgeInsetsDirectional.only(end: 20),
         decoration: BoxDecoration(
           color: p.expense.withValues(alpha: 0.25),
           borderRadius: BorderRadius.circular(18),

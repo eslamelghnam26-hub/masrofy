@@ -52,9 +52,7 @@ Future<void> showMonthPicker(BuildContext context, MasrofyStore store) async {
                     IconButton(
                       onPressed: () => setSheetState(() => year--),
                       icon: Icon(
-                        store.language == 'ar'
-                            ? Icons.chevron_right
-                            : Icons.chevron_left,
+                        Icons.chevron_left,
                         color: p.textSecondary,
                       ),
                     ),
@@ -75,9 +73,7 @@ Future<void> showMonthPicker(BuildContext context, MasrofyStore store) async {
                           ? () => setSheetState(() => year++)
                           : null,
                       icon: Icon(
-                        store.language == 'ar'
-                            ? Icons.chevron_left
-                            : Icons.chevron_right,
+                        Icons.chevron_right,
                         color: p.textSecondary,
                       ),
                     ),

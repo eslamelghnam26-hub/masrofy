@@ -147,7 +147,9 @@ class _PinSetupSheetState extends State<PinSetupSheet> {
         left: 24,
         right: 24,
         top: 12,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+        bottom: MediaQuery.viewInsetsOf(context).bottom +
+            MediaQuery.viewPaddingOf(context).bottom +
+            24,
       ),
       decoration: BoxDecoration(
         color: p.bg,

@@ -113,7 +113,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return Scaffold(
       backgroundColor: p.bg,
       appBar: AppBar(
-        title: Text(_isEditing ? s.editTransaction : (_isIncome ? s.addIncome : s.addExpense)),
+        title: Text(
+          _isEditing ? s.editTransaction : (_isIncome ? s.addIncome : s.addExpense),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
@@ -167,13 +171,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   Icon(Icons.calendar_today_outlined,
                       size: 17, color: p.textMuted),
                   const SizedBox(width: 10),
-                  Text(
-                    widget.store.language == 'ar'
-                        ? DateFormat('EEEE، d MMMM y', 'ar').format(_selectedDate)
-                        : DateFormat('EEEE, d MMMM y', 'en').format(_selectedDate),
-                    style: TextStyle(color: p.textPrimary, fontSize: 14),
+                  Flexible(
+                    child: Text(
+                      widget.store.language == 'ar'
+                          ? DateFormat('EEEE، d MMMM y', 'ar').format(_selectedDate)
+                          : DateFormat('EEEE, d MMMM y', 'en').format(_selectedDate),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: p.textPrimary, fontSize: 14),
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   Icon(Icons.chevron_left, size: 20, color: p.textMuted),
                 ],
               ),
@@ -398,7 +406,7 @@ class _AmountCard extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 6, right: 6),
+                padding: const EdgeInsetsDirectional.only(bottom: 6, end: 6),
                 child: Text(s.currencySymbol(),
                     style: TextStyle(color: p.textSecondary)),
               ),
@@ -428,22 +436,25 @@ class _CategoryGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categories = AppCategory.byType(type);
-    return GridView.count(
-      crossAxisCount: 4,
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 0.86,
-      children: [
-        for (final c in categories)
-          _CategoryItem(
-            cat: c,
-            selected: c.id == selected,
-            strings: strings,
-            onTap: () => onSelect(c.id),
-          ),
-      ],
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 110,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 0.9,
+      ),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final c = categories[index];
+        return _CategoryItem(
+          cat: c,
+          selected: c.id == selected,
+          strings: strings,
+          onTap: () => onSelect(c.id),
+        );
+      },
     );
   }
 }

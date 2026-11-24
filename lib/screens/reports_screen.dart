@@ -40,34 +40,45 @@ class ReportsPage extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(s.navReports,
-                      style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: p.textPrimary)),
-                  const Spacer(),
-                  Material(
-                    color: p.bgElevated,
-                    borderRadius: BorderRadius.circular(12),
-                    child: InkWell(
-                      onTap: () => showMonthPicker(context, store),
+                  Flexible(
+                    child: Text(s.navReports,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: p.textPrimary)),
+                  ),
+                  const SizedBox(width: 8),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 170),
+                    child: Material(
+                      color: p.bgElevated,
                       borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 7),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: p.cardBorder),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.calendar_month_outlined,
-                                size: 13, color: p.textSecondary),
-                            const SizedBox(width: 6),
-                            Text(monthLabel,
-                                style: TextStyle(
-                                    fontSize: 12, color: p.textSecondary)),
-                          ],
+                      child: InkWell(
+                        onTap: () => showMonthPicker(context, store),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 7),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: p.cardBorder),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.calendar_month_outlined,
+                                  size: 13, color: p.textSecondary),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(monthLabel,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: p.textSecondary)),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -118,11 +129,14 @@ class ReportsPage extends StatelessWidget {
                               style:
                                   TextStyle(fontSize: 11, color: p.textMuted)),
                           const SizedBox(height: 2),
-                          Text(fmt.format(total),
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w900,
-                                  color: p.textPrimary)),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(fmt.format(total),
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                    color: p.textPrimary)),
+                          ),
                         ],
                       ),
                     ),
@@ -137,24 +151,32 @@ class ReportsPage extends StatelessWidget {
                         alignment: WrapAlignment.center,
                         children: [
                           for (final e in breakdown)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                      color: AppCategory.byId(
-                                              e.key, TxType.expense)
-                                          .color,
-                                      shape: BoxShape.circle),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                    '${AppCategory.byId(e.key, TxType.expense).localName(s.language)} ${total > 0 ? (e.value / total * 100).round() : 0}%',
-                                    style: TextStyle(
-                                        fontSize: 11, color: p.textSecondary)),
-                              ],
+                            SizedBox(
+                              width: 150,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                        color: AppCategory.byId(
+                                                e.key, TxType.expense)
+                                            .color,
+                                        shape: BoxShape.circle),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      '${AppCategory.byId(e.key, TxType.expense).localName(s.language)} ${total > 0 ? (e.value / total * 100).round() : 0}%',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: p.textSecondary),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                         ],
                       ),
@@ -282,19 +304,29 @@ class _ReportRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(cat.localName(s.language),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: p.textPrimary)),
             ),
-            Text('${(fraction * 100).round()}%',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: cat.color)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('${(fraction * 100).round()}%',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: cat.color)),
+            ),
             const SizedBox(width: 8),
-            Text(fmt.format(amount),
-                style: TextStyle(fontSize: 11, color: p.textMuted)),
+            Flexible(
+              child: Text(fmt.format(amount),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: TextStyle(fontSize: 11, color: p.textMuted)),
+            ),
           ],
         ),
         const SizedBox(height: 8),

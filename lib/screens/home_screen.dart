@@ -1087,12 +1087,17 @@ class _RecentRowState extends State<_RecentRow> {
             ),
           ),
           const SizedBox(width: 6),
-          Text(
-            '${isIncome ? '+' : '-'}${fmt.format(tx.amount)}',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: isIncome ? p.income : p.expense,
+          Flexible(
+            child: Text(
+              '${isIncome ? '+' : '-'}${fmt.format(tx.amount)}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: isIncome ? p.income : p.expense,
+              ),
             ),
           ),
           const SizedBox(width: 2),

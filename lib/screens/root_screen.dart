@@ -108,13 +108,18 @@ class _HomeNavBar extends StatelessWidget {
                         color: fg,
                       ),
                       const SizedBox(height: 3),
-                      Text(
-                        items[i].$3,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight:
-                              selected ? FontWeight.w800 : FontWeight.w500,
-                          color: fg,
+                      Flexible(
+                        child: Text(
+                          items[i].$3,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight:
+                                selected ? FontWeight.w800 : FontWeight.w500,
+                            color: fg,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
